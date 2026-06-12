@@ -11,17 +11,24 @@
 - Composer reproducibility
 - Local XAMPP compatibility
 
-## Planned
-
-### Sprint 2
+### v1.1-tenancy-foundation
 - Tenancy Foundation
-- Company
-- Branch
-- Work Location
-- Cost Center
+- Company management
+- Branch management
+- Work Location management
+- Cost Center management
+- Company Settings
+- Subscription Plans
+- Company Subscriptions
+- Company-scoped models, policies, and resources
+
+## Planned
 
 ### Sprint 3
 - Indonesian HR Master Data
+- Organization Structure Foundation
+- Employee Indonesian Profile Fields
+- Expatriate/Korean Workforce Readiness
 
 ### Sprint 4
 - Leave Enterprise
