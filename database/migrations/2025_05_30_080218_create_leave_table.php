@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -17,7 +18,7 @@ return new class extends Migration {
             $table->string('leave_type');
             $table->date('start_date');
             $table->date('end_date');
-            $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');// pending, approved, rejected
+            $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending'); // pending, approved, rejected
             $table->text('rejection_reason')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();

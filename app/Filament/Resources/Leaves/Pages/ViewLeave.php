@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Leaves\Pages;
 
-use Filament\Actions\EditAction;
 use App\Filament\Resources\Leaves\LeaveResource;
-use Filament\Actions;
+use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewLeave extends ViewRecord

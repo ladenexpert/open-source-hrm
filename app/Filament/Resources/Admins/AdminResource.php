@@ -2,28 +2,32 @@
 
 namespace App\Filament\Resources\Admins;
 
-use App\Filament\Resources\Admins\Pages\{CreateAdmin, EditAdmin, ViewAdmin};
+use App\Filament\Resources\Admins\Pages\CreateAdmin;
+use App\Filament\Resources\Admins\Pages\EditAdmin;
+use App\Filament\Resources\Admins\Pages\ListAdmins;
+use App\Filament\Resources\Admins\Pages\ViewAdmin;
 use App\Filament\Resources\Employees\Schemas\EmployeeForm as AdminForm;
 use App\Filament\Resources\Employees\Schemas\EmployeeTable as AdminTable;
-use Filament\Schemas\Schema;
-
-use App\Filament\Resources\Admins\Pages\ListAdmins;
-use Filament\Resources\Resource;
-use Filament\Tables\Table;
 use App\Models\Employee;
-use Illuminate\Database\Eloquent\Model;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-
-
 
 class AdminResource extends Resource
 {
     protected static ?string $model = Employee::class;
+
     protected static ?string $label = 'Admin';
+
     protected static ?string $pluralLabel = 'Admins';
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
+
     protected static string|\UnitEnum|null $navigationGroup = 'Organization';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema

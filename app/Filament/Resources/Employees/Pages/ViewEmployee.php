@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Filament\Resources\Employees\Pages;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
+
 use App\Filament\Resources\Employees\EmployeeResource;
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewEmployee extends ViewRecord

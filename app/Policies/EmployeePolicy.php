@@ -13,7 +13,7 @@ class EmployeePolicy extends BasePolicy
 
     public function view(Employee $user, Employee $employee): bool
     {
-        return $this->canManageHrMasterData($user)
+        return $this->canManageCompanyHrRecord($user, $employee)
             || $this->isOwnEmployeeRecord($user, $employee->id)
             || $this->canManageEmployeeDepartment($user, $employee);
     }
@@ -25,14 +25,14 @@ class EmployeePolicy extends BasePolicy
 
     public function update(Employee $user, Employee $employee): bool
     {
-        return $this->canManageHrMasterData($user)
+        return $this->canManageCompanyHrRecord($user, $employee)
             || $this->isOwnEmployeeRecord($user, $employee->id)
             || $this->canManageEmployeeDepartment($user, $employee);
     }
 
     public function delete(Employee $user, Employee $employee): bool
     {
-        return $this->canManageHrMasterData($user);
+        return $this->canManageCompanyHrRecord($user, $employee);
     }
 
     public function deleteAny(Employee $user): bool

@@ -3,16 +3,17 @@
 namespace App\Filament\Resources\Messages\Pages;
 
 use App\Filament\Resources\Messages\MessageResource;
-use Filament\Actions;
+use App\Models\Employee;
+use App\Models\Message;
+use App\Models\Topic;
 use Filament\Resources\Pages\CreateRecord;
-use App\Models\{Message, Topic, User, Employee};
-
+use Illuminate\Database\Eloquent\Model;
 
 class CreateMessage extends CreateRecord
 {
-
     protected static string $resource = MessageResource::class;
-    protected function handleRecordCreation(array $data): \Illuminate\Database\Eloquent\Model
+
+    protected function handleRecordCreation(array $data): Model
     {
         $topic = null;
 
@@ -27,8 +28,8 @@ class CreateMessage extends CreateRecord
         foreach ($receiverIds as $receiverId) {
             // Ensure receiver exists
             $receiver = Employee::find($receiverId);
-            if (!$receiver) {
-                throw new \Exception("Invalid recipient selected");
+            if (! $receiver) {
+                throw new \Exception('Invalid recipient selected');
             }
 
             // Create topic for this message thread
@@ -44,16 +45,17 @@ class CreateMessage extends CreateRecord
                 'sender_id' => auth()->id(),
                 'content' => $data['content'],
                 'read_at' => null,
-                'receiver_id' => $receiverId
+                'receiver_id' => $receiverId,
             ]);
         }
 
-        if (!$topic) {
+        if (! $topic) {
             throw new \Exception('Failed to create message');
         }
 
         return $topic;
     }
+
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('view', ['record' => $this->record]);

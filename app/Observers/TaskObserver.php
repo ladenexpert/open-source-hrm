@@ -2,13 +2,14 @@
 
 namespace App\Observers;
 
+use App\Filament\Pages\TaskBoard;
 use App\Models\Employee;
 use App\Models\Task;
-use App\Filament\Pages\TaskBoard;
 use App\Models\User;
-use Filament\Notifications\Notification;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
+
 class TaskObserver
 {
     /**
@@ -55,6 +56,7 @@ class TaskObserver
                 ->sendToDatabase($recipient);
         }
     }
+
     /**
      * Handle the Task "deleted" event.
      */

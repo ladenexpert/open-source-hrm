@@ -1,12 +1,17 @@
 <?php
+
 namespace App\Filament\Resources\Messages\Schemas;
 
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\ViewAction;
+use Filament\Support\Enums\FontWeight;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Support\Enums\FontWeight;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
+
 class MessageTable
 {
     public static function configure(Table $table): Table
@@ -15,15 +20,16 @@ class MessageTable
             ->poll('1s')
             ->modifyQueryUsing(function ($query) {
                 $userId = Auth::id();
+
                 return $query->where(function ($query) use ($userId) {
                     $query
-                        ->where("creator_id", $userId)
-                        ->orWhere("receiver_id", $userId);
+                        ->where('creator_id', $userId)
+                        ->orWhere('receiver_id', $userId);
                 });
             })
             ->columns([
                 //
-                TextColumn::make("creator.name")
+                TextColumn::make('creator.name')
                     ->sortable([
                         'first_name',
                         'last_name',
@@ -32,11 +38,11 @@ class MessageTable
                         'first_name',
                         'last_name',
                     ])
-                    ->label("Sender")
+                    ->label('Sender')
                     ->weight(function ($record) {
                         return $record
                             ->message()
-                            ->whereNull("read_at")
+                            ->whereNull('read_at')
                             ->exists()
                             ? FontWeight::Bold
                             : FontWeight::Light;
@@ -44,44 +50,44 @@ class MessageTable
                     ->color(function ($record) {
                         return $record
                             ->message()
-                            ->whereNull("read_at")
+                            ->whereNull('read_at')
                             ->exists()
-                            ? "light"
-                            : "gray";
+                            ? 'light'
+                            : 'gray';
                     }),
-                TextColumn::make("subject")
-                    ->label("Subject")
+                TextColumn::make('subject')
+                    ->label('Subject')
                     ->searchable()
                     ->limit(20)
                     ->color(
                         color: function ($record) {
                             return $record
                                 ->message()
-                                ->whereNull("read_at")
+                                ->whereNull('read_at')
                                 ->exists()
-                                ? "light"
-                                : "gray";
+                                ? 'light'
+                                : 'gray';
                         },
                     )
                     ->weight(function ($record) {
                         return $record
                             ->message()
-                            ->whereNull("read_at")
+                            ->whereNull('read_at')
                             ->exists()
                             ? FontWeight::Bold
                             : FontWeight::Light;
                     }),
 
-                TextColumn::make("created_at")
-                    ->label("Created at")
+                TextColumn::make('created_at')
+                    ->label('Created at')
 
                     ->formatStateUsing(
-                        fn($state) => $state->format("D, M-d-Y H:i A"),
+                        fn ($state) => $state->format('D, M-d-Y H:i A'),
                     )
                     ->weight(function ($record) {
                         return $record
                             ->message()
-                            ->whereNull("read_at")
+                            ->whereNull('read_at')
                             ->exists()
                             ? FontWeight::Bold
                             : FontWeight::Light;
@@ -89,20 +95,20 @@ class MessageTable
                     ->color(function ($record) {
                         return $record
                             ->message()
-                            ->whereNull("read_at")
+                            ->whereNull('read_at')
                             ->exists()
-                            ? "light"
-                            : "gray";
+                            ? 'light'
+                            : 'gray';
                     }),
             ])
 
             ->recordActions([
-                \Filament\Actions\ActionGroup::make([
+                ActionGroup::make([
 
-                    \Filament\Actions\ViewAction::make(),
-                    \Filament\Actions\DeleteAction::make(
+                    ViewAction::make(),
+                    DeleteAction::make(
 
-                    )
+                    ),
                 ]),
             ])
             ->toolbarActions([
@@ -111,6 +117,6 @@ class MessageTable
                 ]),
             ])
 
-            ->defaultSort("created_at", "desc");
+            ->defaultSort('created_at', 'desc');
     }
 }

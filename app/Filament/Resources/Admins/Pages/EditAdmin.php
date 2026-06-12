@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Admins\Pages;
 
-use Filament\Actions\DeleteAction;
 use App\Filament\Resources\Admins\AdminResource;
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditAdmin extends EditRecord

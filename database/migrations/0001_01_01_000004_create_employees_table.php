@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -42,7 +43,6 @@ return new class extends Migration {
             $table->string('next_of_kin_relationship')->nullable();
             $table->string('next_of_kin_phone')->nullable();
             $table->string('next_of_kin_email')->nullable();
-
 
             $table->string('password');
             $table->rememberToken();

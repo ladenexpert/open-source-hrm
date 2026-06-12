@@ -4,8 +4,7 @@ namespace App\Observers;
 
 use App\Models\Department;
 use Filament\Notifications\Notification;
-use Filament\Actions\Action;
-use App\Filament\Resources\Departments\DepartmentResource;
+
 class DepartmentObserver
 {
     /**
@@ -25,9 +24,10 @@ class DepartmentObserver
         //
         $this->sendManagerNotification($department);
     }
+
     private function sendManagerNotification(Department $department): void
     {
-        if (!$department->manager) {
+        if (! $department->manager) {
             return;
         }
         if ($department->manager) {
@@ -38,6 +38,7 @@ class DepartmentObserver
                 ->sendToDatabase($department->manager);
         }
     }
+
     /**
      * Handle the Department "deleted" event.
      */

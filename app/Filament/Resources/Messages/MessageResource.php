@@ -2,30 +2,36 @@
 
 namespace App\Filament\Resources\Messages;
 
-use App\Filament\Resources\Messages\Schemas\MessageForm;
-use Filament\Schemas\Schema;
-use App\Filament\Resources\Messages\Pages\ListMessages;
 use App\Filament\Resources\Messages\Pages\CreateMessage;
+use App\Filament\Resources\Messages\Pages\ListMessages;
 use App\Filament\Resources\Messages\Pages\ViewMessage;
-use App\Models\{Message, Topic, User, Employee};
-use Illuminate\Support\Facades\Auth;
-use Filament\Resources\Resource;
-use Filament\Tables\Table;
+use App\Filament\Resources\Messages\Schemas\MessageForm;
 use App\Filament\Resources\Messages\Schemas\MessageTable;
+use App\Models\Employee;
+use App\Models\Message;
+use App\Models\Topic;
+use App\Models\User;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class MessageResource extends Resource
 {
     protected static ?string $model = Topic::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = "heroicon-o-envelope";
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-envelope';
 
-    protected static string|\BackedEnum|null $activeNavigationIcon = "heroicon-o-envelope-open";
-    protected static ?string $navigationLabel = "Inbox";
-    protected static ?string $label = "Message";
-    protected static ?string $pluralModelLabel = "Messages";
+    protected static string|\BackedEnum|null $activeNavigationIcon = 'heroicon-o-envelope-open';
 
-    protected static string|\UnitEnum|null $navigationGroup = "Work space";
+    protected static ?string $navigationLabel = 'Inbox';
+
+    protected static ?string $label = 'Message';
+
+    protected static ?string $pluralModelLabel = 'Messages';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Work space';
     // protected static ?string $navigationBadgeTooltip = "Unread messages";
 
     // public static function getNavigationBadge(): ?string
@@ -60,6 +66,12 @@ class MessageResource extends Resource
             return $query->whereRaw('1 = 0');
         }
 
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $query->forCompany($user->getEffectiveCompanyId());
+
         return $query->where(function (Builder $builder) use ($user): Builder {
             return $builder
                 ->where('creator_id', $user->id)
@@ -67,14 +79,12 @@ class MessageResource extends Resource
         });
     }
 
-
-
     public static function getPages(): array
     {
         return [
-            "index" => ListMessages::route("/"),
-            "create" => CreateMessage::route("/create"),
-            "view" => ViewMessage::route("/{record}"),
+            'index' => ListMessages::route('/'),
+            'create' => CreateMessage::route('/create'),
+            'view' => ViewMessage::route('/{record}'),
             // "edit" => Pages\EditMessage::route("/{record}/edit"),
         ];
     }

@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Employees\Pages;
 
-use Filament\Actions\CreateAction;
 use App\Filament\Resources\Employees\EmployeeResource;
-use Filament\Actions;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListEmployees extends ListRecords
@@ -14,7 +13,7 @@ class ListEmployees extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()
+            CreateAction::make(),
 
         ];
     }

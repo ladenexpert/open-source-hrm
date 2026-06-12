@@ -1,9 +1,15 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\AuthServiceProvider;
+use App\Providers\Filament\AdminPanelProvider;
+use App\Providers\Filament\EmployeePanelProvider;
+use Spatie\Permission\PermissionServiceProvider;
+
 return [
-    App\Providers\AuthServiceProvider::class,
-    App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\AdminPanelProvider::class,
-    App\Providers\Filament\EmployeePanelProvider::class,
-    Spatie\Permission\PermissionServiceProvider::class
+    AuthServiceProvider::class,
+    AppServiceProvider::class,
+    AdminPanelProvider::class,
+    EmployeePanelProvider::class,
+    PermissionServiceProvider::class,
 ];

@@ -1,12 +1,24 @@
 <?php
+
 namespace App\Filament\Resources\Employees\Schemas;
 
+use App\Models\Department;
+use App\Models\Employee;
+use App\Models\Position;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use App\Models\{Employee, Position, Department};
-use Filament\Tables\Filters\{Filter, SelectFilter};
-use Filament\Tables\Columns\{TextColumn, ToggleColumn, };
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Actions\{ActionGroup, EditAction, ViewAction, DeleteAction, BulkActionGroup, DeleteBulkAction};
+use Illuminate\Support\Facades\Auth;
+
 class EmployeeTable
 {
     public static function configure(Table $table): Table
@@ -20,21 +32,27 @@ class EmployeeTable
             ->filters(
                 [
 
-
                     Filter::make('is_active')
                         ->label('Active Employees')
                         // ->toggle()
-                        ->query(fn(Builder $query): Builder => $query->where('is_active', true))
+                        ->query(fn (Builder $query): Builder => $query->where('is_active', true))
                         ->default(false),
                     Filter::make('is_inactive')
                         ->label('Inactive Employees')
                         // ->toggle()
-                        ->query(fn(Builder $query): Builder => $query->where('is_active', false))
+                        ->query(fn (Builder $query): Builder => $query->where('is_active', false))
                         ->default(false),
                     SelectFilter::make('department_id')
                         ->label('Department')
                         ->options(
-                            fn() => Department::all()->pluck('name', 'id')
+                            fn () => Department::query()
+                                ->when(
+                                    Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin(),
+                                    fn (Builder $query): Builder => $query->forCompany(Auth::user()->getEffectiveCompanyId()),
+                                )
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all()
                         )
                         ->searchable(),
                     SelectFilter::make('employment_type')
@@ -47,12 +65,16 @@ class EmployeeTable
                     SelectFilter::make('position_id')
                         ->label('Position')
                         ->options(
-                            Position::all()->pluck('title', 'id')
+                            Position::query()
+                                ->when(
+                                    Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin(),
+                                    fn (Builder $query): Builder => $query->forCompany(Auth::user()->getEffectiveCompanyId()),
+                                )
+                                ->orderBy('title')
+                                ->pluck('title', 'id')
+                                ->all()
                         )
                         ->searchable(),
-
-
-
 
                 ],
 
@@ -69,12 +91,12 @@ class EmployeeTable
                     ->searchable(
                         [
                             'first_name',
-                            'last_name'
+                            'last_name',
                         ]
                     )
                     ->sortable([
                         'first_name',
-                        'last_name'
+                        'last_name',
                     ]),
                 TextColumn::make('department.name')
                     ->label('Department')
@@ -138,7 +160,7 @@ class EmployeeTable
                     EditAction::make(),
                     ViewAction::make(),
                     DeleteAction::make(),
-                ])
+                ]),
 
             ])
             ->toolbarActions([

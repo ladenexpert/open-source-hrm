@@ -2,29 +2,27 @@
 
 namespace App\Filament\Resources\Messages\Pages;
 
-use App\Filament\Resources\Messages\Schemas\MessageInfolist;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Actions;
 use App\Filament\Resources\Messages\MessageResource;
-use Filament\Actions\{CreateAction, Action as FAction};
-use Filament\Infolists\Components\Actions\{Action};
+use App\Filament\Resources\Messages\Schemas\MessageInfolist;
+use App\Models\Message;
+use App\Models\Topic;
+use Filament\Actions\Action as FAction;
+use Filament\Forms\Components\RichEditor as FRichEditor;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use App\Models\{Topic, Message};
-use Filament\Forms\Components\{RichEditor as FRichEditor};
-use Filament\Infolists;
-use Filament\Infolists\Components\{TextEntry, RepeatableEntry, Group, Grid, RichEditor};
-use Filament\Support\Enums\FontWeight;
-
+use Filament\Schemas\Schema;
 
 class ViewMessage extends ViewRecord
 {
     protected static string $resource = MessageResource::class;
+
     public $poll = '3s';
+
     public function getTitle(): string
     {
         return 'View Conversation';
     }
+
     public function mount($record): void
     {
         parent::mount($record);
@@ -33,19 +31,22 @@ class ViewMessage extends ViewRecord
             ->whereNull('read_at')
             ->where('sender_id', '!=', auth()->id())
             ->update([
-                'read_at' => now()
+                'read_at' => now(),
             ]);
     }
+
     public function getSubheading(): string
     {
 
         // return 'Subject: ' . optional($this->record->topic)->subject;
-        return 'Subject: ' . $this->record->subject;
+        return 'Subject: '.$this->record->subject;
     }
+
     public function refreshInfo()
     {
         $this->refresh();
     }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -64,18 +65,14 @@ class ViewMessage extends ViewRecord
 
                 })
                 ->visible(
-                    fn() =>
-                    $this->record->receiver_id === auth()->id()
+                    fn () => $this->record->receiver_id === auth()->id()
 
-                )
-
-
-            ,
+                ),
             FAction::make('Reply')->label('Reply')
                 ->schema([
                     FRichEditor::make('content')
                         ->required()
-                        ->autofocus()
+                        ->autofocus(),
                     // ->extraAttributes(['style' => 'height: 400px;'])
                 ])
                 ->action(function ($data) {
@@ -86,7 +83,7 @@ class ViewMessage extends ViewRecord
                         'topic_id' => $this->record->id,
                         'sender_id' => auth()->id(),
                         'content' => $data['content'],
-                        'receiver_id' => $receiverId
+                        'receiver_id' => $receiverId,
                     ]);
                     $this->record->load('message');
                     $this->refresh();
@@ -99,11 +96,9 @@ class ViewMessage extends ViewRecord
                 ->label(' ')
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
-                ->action(fn() => $this->refresh()),
+                ->action(fn () => $this->refresh()),
         ];
     }
-
-
 
     public function infolist(Schema $schema): Schema
     {

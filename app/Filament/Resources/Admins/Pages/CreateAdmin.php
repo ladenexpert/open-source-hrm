@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Admins\Pages;
 
 use App\Filament\Resources\Admins\AdminResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateAdmin extends CreateRecord

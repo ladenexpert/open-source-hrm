@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Company;
 use App\Models\Employee;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Database\Eloquent\Model;
@@ -34,6 +35,33 @@ abstract class BasePolicy
         return $user->canManagePayroll();
     }
 
+    protected function companyIdFor(Employee $user): ?int
+    {
+        return $user->getEffectiveCompanyId();
+    }
+
+    protected function sharesCompany(Employee $user, Model $record, string $companyColumn = 'company_id'): bool
+    {
+        $recordCompanyId = $record->getAttribute($companyColumn);
+
+        if (blank($recordCompanyId)) {
+            $recordCompanyId = Company::getDefaultCompanyId();
+        }
+
+        return filled($recordCompanyId)
+            && (int) $recordCompanyId === (int) $this->companyIdFor($user);
+    }
+
+    protected function canManageCompanyHrRecord(Employee $user, Model $record): bool
+    {
+        return $this->canManageHrMasterData($user) && $this->sharesCompany($user, $record);
+    }
+
+    protected function canManageCompanyPayrollRecord(Employee $user, Model $record): bool
+    {
+        return $this->canManagePayroll($user) && $this->sharesCompany($user, $record);
+    }
+
     protected function isOwnEmployeeRecord(Employee $user, ?int $employeeId): bool
     {
         return filled($employeeId) && ((int) $user->getKey() === (int) $employeeId);
@@ -56,6 +84,10 @@ abstract class BasePolicy
         string $employeeIdColumn = 'employee_id',
         string $employeeRelation = 'employee',
     ): bool {
+        if (! $this->sharesCompany($user, $record)) {
+            return false;
+        }
+
         $employeeId = $record->getAttribute($employeeIdColumn);
 
         if ($this->isOwnEmployeeRecord($user, $employeeId)) {
@@ -67,6 +99,7 @@ abstract class BasePolicy
             : $record->{$employeeRelation};
 
         return $relatedEmployee instanceof Employee
+            && $relatedEmployee->belongsToCompany($this->companyIdFor($user))
             && $this->canManageEmployeeDepartment($user, $relatedEmployee);
     }
 }

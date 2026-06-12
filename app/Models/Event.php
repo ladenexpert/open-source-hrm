@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToCompany;
 use Guava\Calendar\Contracts\Eventable;
 use Guava\Calendar\ValueObjects\CalendarEvent;
-
+use Illuminate\Database\Eloquent\Model;
 
 class Event extends Model implements Eventable
 {
+    use BelongsToCompany;
+
     protected $fillable = [
+        'company_id',
         'title',
         'description',
         'start_time',
@@ -20,6 +23,7 @@ class Event extends Model implements Eventable
     ];
 
     protected $casts = [
+        'company_id' => 'integer',
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'all_day' => 'boolean',
@@ -36,11 +40,10 @@ class Event extends Model implements Eventable
             ->backgroundColor($this->getEventColor())
             ->textColor('#ffffff')
             // ->id($this->id)
-            ->action('edit')
-
-        ;
+            ->action('edit');
 
     }
+
     protected function getEventColor(): string
     {
         return match ($this->type) {
@@ -51,6 +54,4 @@ class Event extends Model implements Eventable
             default => 'primary',
         };
     }
-
-
 }

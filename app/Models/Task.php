@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
-use App\Filament\Pages\TaskBoard;
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
-use Filament\Notifications\Notification;
-use Filament\Actions\Action;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class Task extends Model
 {
-    //
+    use BelongsToCompany;
+
     protected $fillable = [
+        'company_id',
         'title',
         'description',
         'status',
@@ -17,10 +19,11 @@ class Task extends Model
         'assignee_id',
 
         'due_date',
-        'position'
+        'position',
     ];
 
     protected $casts = [
+        'company_id' => 'integer',
         'title' => 'string',
         'description' => 'string',
         'status' => 'string',
@@ -29,22 +32,32 @@ class Task extends Model
         'due_date' => 'datetime',
         'position' => 'integer',
     ];
+
     protected $table = 'tasks';
+
     protected $appends = ['date', 'email'];
 
-    public function assignee()
+    protected function resolveCompanyIdForCreation(): ?int
+    {
+        if (filled($this->assignee_id)) {
+            return Employee::query()->whereKey($this->assignee_id)->value('company_id');
+        }
+
+        return null;
+    }
+
+    public function assignee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'assignee_id');
     }
-
 
     public function getDateAttribute()
     {
         return $this->due_date?->format('d-M-Y');
     }
+
     public function getEmailAttribute()
     {
         return $this->assignee?->email;
     }
-
 }

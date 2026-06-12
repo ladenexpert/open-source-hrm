@@ -3,8 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Attendance;
-use App\Models\Employee;
-use App\Models\Shift;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AttendanceFactory extends Factory

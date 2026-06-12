@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Payrolls\Pages;
 
-use Filament\Actions\DeleteAction;
 use App\Filament\Resources\Payrolls\PayrollResource;
-use Filament\Actions;
+use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditPayroll extends EditRecord

@@ -3,9 +3,10 @@
 namespace App\Observers;
 
 use App\Filament\Resources\Messages\MessageResource;
-use App\Models\{Message, Employee, User};
-use Filament\Notifications\Notification;
+use App\Models\Employee;
+use App\Models\Message;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 
 class MessageObserver
 {
@@ -25,10 +26,8 @@ class MessageObserver
             $url = str_replace('/portal', '', $url);
         } elseif ($recipient->hasRole('employee') && $sender->hasRole('admin')) {
             $parsed = parse_url(MessageResource::getUrl('view', ['record' => $topic]));
-            $url = url('/portal' . $parsed['path']);
+            $url = url('/portal'.$parsed['path']);
         }
-
-
 
         Notification::make()
             ->title('New message')

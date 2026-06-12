@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payroll extends Model
 {
+    use BelongsToCompany;
+
     protected $table = 'payrolls';
+
     protected $fillable = [
+        'company_id',
         'employee_id',
         'pay_date',
         'period',
@@ -17,9 +23,13 @@ class Payroll extends Model
         'allowances',
         'bonuses',
         'notes',
-        'status'
+        'status',
     ];
+
     protected $casts = [
+        'company_id' => 'integer',
+        'employee_id' => 'integer',
+        'pay_date' => 'date',
         'deductions' => 'array',
         'allowances' => 'array',
         'bonuses' => 'array',
@@ -28,10 +38,18 @@ class Payroll extends Model
     protected $with = [
         'employee',
     ];
-    public function employee()
+
+    protected function resolveCompanyIdForCreation(): ?int
+    {
+        if (filled($this->employee_id)) {
+            return Employee::query()->whereKey($this->employee_id)->value('company_id');
+        }
+
+        return null;
+    }
+
+    public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
     }
-
-
 }

@@ -14,7 +14,7 @@ class AttendancePolicy extends BasePolicy
 
     public function view(Employee $user, Attendance $attendance): bool
     {
-        return $this->canManageHrMasterData($user)
+        return $this->canManageCompanyHrRecord($user, $attendance)
             || $this->canAccessEmployeeOwnedRecord($user, $attendance);
     }
 
@@ -25,13 +25,13 @@ class AttendancePolicy extends BasePolicy
 
     public function update(Employee $user, Attendance $attendance): bool
     {
-        return $this->canManageHrMasterData($user)
+        return $this->canManageCompanyHrRecord($user, $attendance)
             || $this->canAccessEmployeeOwnedRecord($user, $attendance);
     }
 
     public function delete(Employee $user, Attendance $attendance): bool
     {
-        return $this->canManageHrMasterData($user);
+        return $this->canManageCompanyHrRecord($user, $attendance);
     }
 
     public function deleteAny(Employee $user): bool

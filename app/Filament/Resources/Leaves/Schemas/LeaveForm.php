@@ -1,9 +1,13 @@
 <?php
+
 namespace App\Filament\Resources\Leaves\Schemas;
 
+use App\Models\Employee;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextArea;
 use Filament\Schemas\Schema;
-use Filament\Forms\Components\{Select, DatePicker, TextArea};
-use App\Models\{Employee};
+
 class LeaveForm
 {
     public static function configure(Schema $schema): Schema
@@ -49,15 +53,14 @@ class LeaveForm
                     ])
                     ->default('Pending')
                     ->required(),
-                Textarea::make('rejection_reason')
+                TextArea::make('rejection_reason')
                     ->nullable()
                     ->columnSpan('full')
                     ->label('Rejection Reason'),
-                Textarea::make('notes')
+                TextArea::make('notes')
                     ->nullable()
                     ->columnSpan('full')
                     ->label('Notes'),
-
 
             ]);
     }

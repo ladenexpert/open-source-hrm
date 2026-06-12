@@ -1,11 +1,24 @@
 <?php
 
 namespace App\Filament\Resources\Employees\Schemas;
-use Filament\Forms\Components\{TextInput, DatePicker, Select, Toggle, TextArea};
+
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\CostCenter;
+use App\Models\Department;
+use App\Models\Employee;
+use App\Models\Position;
+use App\Models\WorkLocation;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextArea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use App\Models\{Position, Department};
-use Filament\Schemas\Components\{Section, Grid};
 use Illuminate\Database\Eloquent\Builder;
+
 class EmployeeForm
 {
     public static function configure(Schema $schema): Schema
@@ -17,15 +30,13 @@ class EmployeeForm
                     ->collapsible()
                     ->schema([
 
-
                         Grid::make(2)->schema([
                             TextInput::make('employee_code')
                                 ->required()
                                 ->maxLength(50)
                                 ->label('Employee code')
                                 ->placeholder('Enter employee number')
-                                ->columnSpan(1)
-                            ,
+                                ->columnSpan(1),
                             TextInput::make('first_name')
                                 ->required(),
                             TextInput::make('last_name')
@@ -38,10 +49,10 @@ class EmployeeForm
                                     'Single' => 'Single',
                                     'Married' => 'Married',
                                     'Divorced' => 'Divorced',
-                                    'Widowed' => 'Widowed'
+                                    'Widowed' => 'Widowed',
                                 ]),
 
-                        ])
+                        ]),
                     ])
                     ->columnSpanFull(),
                 Section::make('Contact Information')
@@ -54,14 +65,12 @@ class EmployeeForm
                                     ->required()
                                     ->label('Email Address')
                                     ->unique(ignoreRecord: true)
-                                    ->copyable()
-                                ,
+                                    ->copyable(),
                                 TextInput::make('phone')->tel()->required()->label('Phone Number')->unique(ignoreRecord: true),
                                 TextInput::make('national_id')->required()->unique(ignoreRecord: true)
-                                    ->integer()
-                                ,
+                                    ->integer(),
                                 TextInput::make('kra_pin'),
-                            ])
+                            ]),
                     ])
                     ->columnSpanFull(),
                 Section::make('Emergency Contact')
@@ -72,7 +81,7 @@ class EmployeeForm
                             ->schema([
                                 TextInput::make('emergency_contact_name'),
                                 TextInput::make('emergency_contact_phone'),
-                            ])
+                            ]),
                     ])
                     ->columnSpanFull(),
                 Section::make('Next of Kin')
@@ -93,7 +102,7 @@ class EmployeeForm
                                 TextInput::make('next_of_kin_email')
                                     ->label('Email')
                                     ->email(),
-                            ])
+                            ]),
                     ])
                     ->columnSpanFull(),
                 Section::make('Employment Details')
@@ -102,23 +111,85 @@ class EmployeeForm
                         Grid::make(2)
 
                             ->schema([
+                                Select::make('company_id')
+                                    ->label('Company')
+                                    ->options(fn (): array => Company::query()->orderBy('name')->pluck('name', 'id')->all())
+                                    ->default(fn (): ?int => auth()->user() instanceof Employee ? auth()->user()->getEffectiveCompanyId() : Company::getDefaultCompanyId())
+                                    ->required()
+                                    ->searchable()
+                                    ->disabled(fn (): bool => auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin())
+                                    ->dehydrated(),
                                 Select::make('department_id')
                                     ->relationship(
                                         name: 'department',
                                         titleAttribute: 'name',
-                                        modifyQueryUsing: fn(Builder $query) => $query->select('id', 'name')->orderBy('name', 'asc')
+                                        modifyQueryUsing: function (Builder $query): Builder {
+                                            $query->select('id', 'name', 'company_id')->orderBy('name', 'asc');
+
+                                            if (auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin()) {
+                                                $query->forCompany(auth()->user()->getEffectiveCompanyId());
+                                            }
+
+                                            return $query;
+                                        }
                                     )
                                     ->label('Department')
                                     ->searchable()
                                     ->placeholder('Select a department')
                                     ->preload()
-                                    // ->columnSpanFull()
+                                    ->nullable(),
+                                Select::make('branch_id')
+                                    ->label('Branch')
+                                    ->options(function (): array {
+                                        $query = Branch::query()->orderBy('name');
+
+                                        if (auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin()) {
+                                            $query->forCompany(auth()->user()->getEffectiveCompanyId());
+                                        }
+
+                                        return $query->pluck('name', 'id')->all();
+                                    })
+                                    ->searchable()
+                                    ->preload()
+                                    ->nullable(),
+                                Select::make('work_location_id')
+                                    ->label('Work Location')
+                                    ->options(function (): array {
+                                        $query = WorkLocation::query()->orderBy('name');
+
+                                        if (auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin()) {
+                                            $query->forCompany(auth()->user()->getEffectiveCompanyId());
+                                        }
+
+                                        return $query->pluck('name', 'id')->all();
+                                    })
+                                    ->searchable()
+                                    ->preload()
+                                    ->nullable(),
+                                Select::make('cost_center_id')
+                                    ->label('Cost Center')
+                                    ->options(function (): array {
+                                        $query = CostCenter::query()->orderBy('name');
+
+                                        if (auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin()) {
+                                            $query->forCompany(auth()->user()->getEffectiveCompanyId());
+                                        }
+
+                                        return $query->pluck('name', 'id')->all();
+                                    })
+                                    ->searchable()
+                                    ->preload()
                                     ->nullable(),
                                 Select::make('position_id')
-                                    ->options(
-                                        Position::all()->pluck('title', 'id')
+                                    ->options(function (): array {
+                                        $query = Position::query()->orderBy('title');
 
-                                    )
+                                        if (auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin()) {
+                                            $query->forCompany(auth()->user()->getEffectiveCompanyId());
+                                        }
+
+                                        return $query->pluck('title', 'id')->all();
+                                    })
                                     ->label('Position')
                                     ->searchable()
                                     ->placeholder('Select a position')
@@ -129,9 +200,15 @@ class EmployeeForm
                                             ->required()
                                             ->label('Position Title'),
                                         Select::make('department_id')
-                                            ->options(
-                                                Department::all()->pluck('name', 'id')
-                                            ),
+                                            ->options(function (): array {
+                                                $query = Department::query()->orderBy('name');
+
+                                                if (auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin()) {
+                                                    $query->forCompany(auth()->user()->getEffectiveCompanyId());
+                                                }
+
+                                                return $query->pluck('name', 'id')->all();
+                                            }),
                                         Grid::make(2)
                                             ->schema([
                                                 TextInput::make('code')
@@ -143,7 +220,7 @@ class EmployeeForm
                                                     ->numeric()
                                                     ->nullable(),
                                             ]),
-                                        Textarea::make('description')
+                                        TextArea::make('description')
                                             ->label('Description')
                                             ->nullable()
                                             ->maxLength(255),
@@ -151,6 +228,7 @@ class EmployeeForm
                                     ])
                                     ->createOptionUsing(function (array $data) {
                                         return Position::create([
+                                            'company_id' => auth()->user() instanceof Employee ? auth()->user()->getEffectiveCompanyId() : Company::getDefaultCompanyId(),
                                             'title' => $data['title'],
                                             'department_id' => $data['department_id'],
                                             'code' => $data['code'] ?? null,
@@ -184,12 +262,9 @@ class EmployeeForm
                                 DatePicker::make('hire_date')->required(),
                                 DatePicker::make('termination_date'),
                                 Toggle::make('is_active')->default(true),
-                            ])
+                            ]),
                     ])
                     ->columnSpanFull(),
-            ])
-
-
-        ;
+            ]);
     }
 }

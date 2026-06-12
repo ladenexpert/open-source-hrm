@@ -14,7 +14,7 @@ class ShiftPolicy extends BasePolicy
 
     public function view(Employee $user, Shift $shift): bool
     {
-        return $this->canManageHrMasterData($user);
+        return $this->canManageCompanyHrRecord($user, $shift);
     }
 
     public function create(Employee $user): bool
@@ -24,12 +24,12 @@ class ShiftPolicy extends BasePolicy
 
     public function update(Employee $user, Shift $shift): bool
     {
-        return $this->canManageHrMasterData($user);
+        return $this->canManageCompanyHrRecord($user, $shift);
     }
 
     public function delete(Employee $user, Shift $shift): bool
     {
-        return $this->canManageHrMasterData($user);
+        return $this->canManageCompanyHrRecord($user, $shift);
     }
 
     public function deleteAny(Employee $user): bool

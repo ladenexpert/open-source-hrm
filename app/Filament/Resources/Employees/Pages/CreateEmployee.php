@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Employees\Pages;
 
 use App\Filament\Resources\Employees\EmployeeResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateEmployee extends CreateRecord
@@ -19,5 +18,4 @@ class CreateEmployee extends CreateRecord
     {
         $this->record->assignRole('employee');
     }
-
 }

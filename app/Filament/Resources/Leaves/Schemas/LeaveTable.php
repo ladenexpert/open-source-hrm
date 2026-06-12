@@ -1,11 +1,18 @@
 <?php
+
 namespace App\Filament\Resources\Leaves\Schemas;
 
 use App\Models\Leave;
-use Filament\Tables\Table;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Actions\{ActionGroup, ViewAction, EditAction, DeleteAction, BulkActionGroup, DeleteBulkAction};
+use Filament\Tables\Table;
+
 class LeaveTable
 {
     public static function configure(Table $table): Table
@@ -47,14 +54,13 @@ class LeaveTable
                     ->label('Duration(Days)'),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'Pending' => 'warning',
                         'Approved' => 'success',
                         'Rejected' => 'danger',
                         default => 'secondary',
                     })
-                    ->label('Status')
-                ,
+                    ->label('Status'),
                 TextColumn::make('rejection_reason')
                     ->label('Rejection Reason')
                     ->default('N/A')
@@ -114,7 +120,7 @@ class LeaveTable
                     ViewAction::make(),
                     EditAction::make(),
                     DeleteAction::make(),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

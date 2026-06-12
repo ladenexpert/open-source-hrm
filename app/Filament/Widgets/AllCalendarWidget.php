@@ -1,30 +1,42 @@
 <?php
 
 namespace App\Filament\Widgets;
+
+use App\Models\Employee;
 use App\Models\Event;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
-use \Guava\Calendar\Filament\CalendarWidget;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
-use Guava\Calendar\ValueObjects\{FetchInfo};
-
-use Guava\Calendar\Filament\Actions\{CreateAction, EditAction, DeleteAction};
-use Filament\Forms\Components\{TextInput, Select, Textarea, Checkbox, DateTimePicker, Toggle};
-use Filament\Schemas\Components\{Grid};
+use Filament\Schemas\Components\Grid;
+use Guava\Calendar\Filament\Actions\CreateAction;
+use Guava\Calendar\Filament\Actions\DeleteAction;
+use Guava\Calendar\Filament\Actions\EditAction;
+use Guava\Calendar\Filament\CalendarWidget;
 use Guava\Calendar\ValueObjects\EventDropInfo;
-use Illuminate\Database\Eloquent\Model;
 use Guava\Calendar\ValueObjects\EventResizeInfo;
+use Guava\Calendar\ValueObjects\FetchInfo;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+
 class AllCalendarWidget extends CalendarWidget
 {
     protected static ?string $title = 'Calendar';
+
     protected static ?int $sort = 2;
+
     protected bool $eventDragEnabled = true;
+
     protected bool $dateClickEnabled = true;
+
     protected bool $eventClickEnabled = true;
+
     protected bool $eventResizeEnabled = true;
-
-
 
     public function createEventAction(): CreateAction
     {
@@ -42,7 +54,7 @@ class AllCalendarWidget extends CalendarWidget
                                 'meeting' => 'Meeting',
                                 'appointment' => 'Appointment',
                                 'deadline' => 'Deadline',
-                                'event' => 'Event'
+                                'event' => 'Event',
                             ]),
                         Toggle::make('all_day')
                             ->reactive()
@@ -62,19 +74,16 @@ class AllCalendarWidget extends CalendarWidget
                     ->schema([
                         DateTimePicker::make('start_time')
                             ->required()
-                            ->readOnly(fn($get) => $get('all_day'))
-
-                        ,
+                            ->readOnly(fn ($get) => $get('all_day')),
                         DateTimePicker::make('end_time')
                             ->required()
-                            ->readOnly(fn($get) => $get('all_day'))
+                            ->readOnly(fn ($get) => $get('all_day')),
 
-                    ])
+                    ]),
 
-
-            ])
-        ;
+            ]);
     }
+
     public function editEventAction(): EditAction
     {
         return $this->editAction(Event::class)
@@ -91,7 +100,7 @@ class AllCalendarWidget extends CalendarWidget
                                 'meeting' => 'Meeting',
                                 'appointment' => 'Appointment',
                                 'deadline' => 'Deadline',
-                                'event' => 'Event'
+                                'event' => 'Event',
                             ]),
                         Toggle::make('all_day')
                             ->inlineLabel(false)
@@ -101,16 +110,14 @@ class AllCalendarWidget extends CalendarWidget
                 Grid::make(2)
                     ->schema([
                         DateTimePicker::make('start_time')
-                            ->required()
-                        ,
+                            ->required(),
                         DateTimePicker::make('end_time')
-                            ->required()
-                    ])
+                            ->required(),
+                    ]),
 
-
-            ])
-        ;
+            ]);
     }
+
     public function viewEventAction(): ViewAction
     {
         return $this->viewAction()
@@ -124,7 +131,7 @@ class AllCalendarWidget extends CalendarWidget
                         TextEntry::make('type')
                             ->hiddenLabel()
                             ->badge()
-                            ->color(fn($record) => match ($record->type) {
+                            ->color(fn ($record) => match ($record->type) {
                                 'meeting' => 'info',
                                 'appointment' => 'success',
                                 'deadline' => 'danger',
@@ -142,10 +149,9 @@ class AllCalendarWidget extends CalendarWidget
                         TextEntry::make('start_time')
                             ->dateTime(),
                         TextEntry::make('end_time')
-                            ->dateTime()
-                    ])
-            ])
-        ;
+                            ->dateTime(),
+                    ]),
+            ]);
     }
 
     public function deleteEventAction(): DeleteAction
@@ -154,34 +160,34 @@ class AllCalendarWidget extends CalendarWidget
             ->model(Event::class);
 
     }
+
     public function onEventDrop(EventDropInfo $info, Model $event): bool
     {
 
-
         $event->update([
             'start_time' => $info->event->getStart(),
-            'end_time' => $info->event->getEnd()
+            'end_time' => $info->event->getEnd(),
         ]);
+
         return true;
 
     }
+
     public function onEventResize(EventResizeInfo $info, Model $event): bool
     {
         // dd($info);
         $event->update([
             'start_time' => $info->event->getStart(),
-            'end_time' => $info->event->getEnd()
+            'end_time' => $info->event->getEnd(),
         ]);
 
         return true;
     }
 
-
     public function getHeaderActions(): array
     {
         return [
             $this->createEventAction(),
-
 
         ];
     }
@@ -208,7 +214,12 @@ class AllCalendarWidget extends CalendarWidget
     {
         $start = $info->start;
         $end = $info->end;
+
         return Event::query()
+            ->when(
+                Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin(),
+                fn (Builder $query): Builder => $query->forCompany(Auth::user()->getEffectiveCompanyId()),
+            )
             ->where(function ($query) use ($start, $end) {
                 $query
                     ->orWhereBetween('end_time', [$start, $end])
@@ -217,7 +228,6 @@ class AllCalendarWidget extends CalendarWidget
                         $query->where('start_time', '<', $start)
                             ->where('end_time', '>', $end);
                     });
-
 
             });
     }

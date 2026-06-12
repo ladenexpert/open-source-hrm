@@ -2,10 +2,16 @@
 
 namespace App\Filament\Resources\Attendances\Schemas;
 
-use Filament\Forms\Components\{TextInput, DatePicker, Select, TimePicker, Textarea};
+use App\Models\Attendance;
+use App\Models\Employee;
+use App\Models\shift;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
-use App\Models\{shift, Employee, Attendance};
-use Filament\Schemas\Components\{Section, Grid};
 
 class AttendanceForm
 {
@@ -21,11 +27,11 @@ class AttendanceForm
                     ->required()
                     ->searchable([
                         'first_name',
-                        'last_name'
+                        'last_name',
                     ]),
                 Select::make('shift_id')
                     ->options(function () {
-                        return Shift::all()->pluck('name', 'id');
+                        return shift::all()->pluck('name', 'id');
                     })
                     ->preload()
                     ->label('Shift')
@@ -34,9 +40,7 @@ class AttendanceForm
                         [
                             TextInput::make('name')
                                 ->required()
-                                ->label('Shift Name')
-
-                            ,
+                                ->label('Shift Name'),
                             Grid::make(2)->schema([
 
                                 TimePicker::make('start_time')
@@ -49,19 +53,16 @@ class AttendanceForm
                                     ->time(),
                             ]),
 
-
-
                         ]
                     )
                     ->createOptionUsing(function (array $data) {
-                        return Shift::create([
+                        return shift::create([
                             'name' => $data['name'],
                             'start_time' => $data['start_time'],
                             'end_time' => $data['end_time'],
 
                         ])->id;
-                    })
-                ,
+                    }),
                 DatePicker::make('date')
                     ->unique(
                         table: Attendance::class,
@@ -84,8 +85,7 @@ class AttendanceForm
                     ->maxLength(255)
                     ->nullable()
                     ->autosize()
-                    ->columnSpanFull()
-                ,
+                    ->columnSpanFull(),
             ]);
     }
 }

@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Attendances\Pages;
 
-use Filament\Actions\CreateAction;
 use App\Filament\Resources\Attendances\AttendanceResource;
-use Filament\Actions;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListAttendances extends ListRecords

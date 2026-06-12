@@ -2,14 +2,14 @@
 
 namespace App\Filament\Resources\Employees;
 
-use App\Filament\Resources\Employees\Schemas\EmployeeForm;
-use App\Filament\Resources\Employees\Schemas\EmployeeTable;
-use Filament\Schemas\Schema;
+use App\Filament\Resources\Employees\Pages\EditEmployee;
 use App\Filament\Resources\Employees\Pages\ListEmployees;
 use App\Filament\Resources\Employees\Pages\ViewEmployee;
-use App\Filament\Resources\Employees\Pages\EditEmployee;
+use App\Filament\Resources\Employees\Schemas\EmployeeForm;
+use App\Filament\Resources\Employees\Schemas\EmployeeTable;
 use App\Models\Employee;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +19,9 @@ class EmployeeResource extends Resource
     protected static ?string $model = Employee::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
+
     protected static string|\UnitEnum|null $navigationGroup = 'HR Management';
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
@@ -66,6 +68,12 @@ class EmployeeResource extends Resource
         if (! $user instanceof Employee) {
             return $query->whereRaw('1 = 0');
         }
+
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $query->forCompany($user->getEffectiveCompanyId());
 
         if ($user->canManageHrMasterData()) {
             return $query;

@@ -12,10 +12,12 @@ class StatsOverview extends BaseWidget
     {
         return redirect()->to('employees?tableFilters[is_active][isActive]=false&tableFilters[is_inactive][isActive]=false');
     }
+
     public function redirectToInactiveEmployees()
     {
         return redirect()->to('employees?tableFilters[is_active][isActive]=false&tableFilters[is_inactive][isActive]=true');
     }
+
     public function redirectToActiveEmployees()
     {
         return redirect()->to('employees?tableFilters[is_active][isActive]=true&tableFilters[is_inactive][isActive]=false');
@@ -25,7 +27,7 @@ class StatsOverview extends BaseWidget
     {
         $commonAttributes = [
             'class' => 'cursor-pointer',
-            'wire:click' => "redirectToEmployees()",
+            'wire:click' => 'redirectToEmployees()',
         ];
 
         return [
@@ -42,7 +44,7 @@ class StatsOverview extends BaseWidget
                 ->extraAttributes(
                     [
                         'class' => 'cursor-pointer',
-                        'wire:click' => "redirectToActiveEmployees()"
+                        'wire:click' => 'redirectToActiveEmployees()',
                     ]
                 )
                 ->description('Number of employees currently active employees')
@@ -54,7 +56,7 @@ class StatsOverview extends BaseWidget
                 ->extraAttributes(
                     [
                         'class' => 'cursor-pointer',
-                        'wire:click' => "redirectToInactiveEmployees()"
+                        'wire:click' => 'redirectToInactiveEmployees()',
                     ]
                 )
                 ->icon('heroicon-o-x-circle'),

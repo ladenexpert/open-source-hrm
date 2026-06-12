@@ -14,7 +14,7 @@ class EventPolicy extends BasePolicy
 
     public function view(Employee $user, Event $event): bool
     {
-        return $this->isActiveUser($user);
+        return $this->sharesCompany($user, $event) && $this->isActiveUser($user);
     }
 
     public function create(Employee $user): bool
@@ -24,12 +24,12 @@ class EventPolicy extends BasePolicy
 
     public function update(Employee $user, Event $event): bool
     {
-        return $this->canManageHrMasterData($user);
+        return $this->canManageCompanyHrRecord($user, $event);
     }
 
     public function delete(Employee $user, Event $event): bool
     {
-        return $this->canManageHrMasterData($user);
+        return $this->canManageCompanyHrRecord($user, $event);
     }
 
     public function deleteAny(Employee $user): bool

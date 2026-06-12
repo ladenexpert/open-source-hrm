@@ -1,10 +1,15 @@
 <?php
 
 namespace App\Filament\Resources\Payrolls\Schema;
+
+use App\Models\Employee;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\KeyValue;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
-use Filament\Forms\Components\{KeyValue};
-use Filament\Forms\Components\{Select, DatePicker, TextInput, Textarea};
-use App\Models\{Employee};
+
 class PayrollForm
 {
     public static function configure(Schema $schema): Schema
@@ -14,7 +19,13 @@ class PayrollForm
                 //
                 Select::make('employee_id')
                     ->options(function () {
-                        return Employee::all()->pluck('name', 'id');
+                        $query = Employee::query()->orderBy('first_name');
+
+                        if (auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin()) {
+                            $query->forCompany(auth()->user()->getEffectiveCompanyId());
+                        }
+
+                        return $query->get()->pluck('name', 'id')->all();
                     })
                     ->searchable(
                         [

@@ -1,13 +1,18 @@
 <?php
+
 namespace App\Filament\Resources\Messages\Schemas;
-use Filament\Schemas\Schema;
-use Filament\Infolists\Components\{TextEntry, RepeatableEntry};
-use Filament\Forms\Components\{RichEditor as FRichEditor};
-use Filament\Support\Enums\FontWeight;
+
+use App\Models\Message;
+use Filament\Actions\Action as FAction;
+use Filament\Forms\Components\RichEditor as FRichEditor;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
-use Filament\Actions\{Action as FAction};
 use Filament\Schemas\Components\Actions;
-use App\Models\{Message};
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
+
 class MessageInfolist
 {
     public static function configure(Schema $schema): Schema
@@ -19,7 +24,7 @@ class MessageInfolist
                     ->poll('3s')
                     ->label('')
                     ->schema([
-                        \Filament\Schemas\Components\Grid::make([
+                        Grid::make([
                             'default' => 1,
                             'md' => 5,
                             'lg' => 5,
@@ -28,7 +33,7 @@ class MessageInfolist
                             ->schema([
                                 TextEntry::make('sender.name')
                                     ->hiddenLabel()
-                                    ->helperText(fn($record) => $record->sender->email)
+                                    ->helperText(fn ($record) => $record->sender->email)
                                     ->weight(FontWeight::Bold)
 
                                     ->icon('heroicon-s-user-circle')
@@ -36,14 +41,13 @@ class MessageInfolist
                                         'default' => 1,
                                         'md' => 2,
                                         'lg' => 2,
-                                    ])
-                                ,
+                                    ]),
                                 TextEntry::make('created_at')
                                     ->label('')
                                     ->columnSpan(2)
 
                                     ->formatStateUsing(
-                                        fn($state) => $state->format('D, M-d-Y H:i A ') . '(' . $state->diffForHumans() . ')'
+                                        fn ($state) => $state->format('D, M-d-Y H:i A ').'('.$state->diffForHumans().')'
                                     ),
                                 Actions::make([
                                     FAction::make('delete')
@@ -68,26 +72,21 @@ class MessageInfolist
                                         ->modalIcon('heroicon-o-trash')
                                         ->iconButton(),
 
-
-
-
                                 ])
                                     ->alignEnd()
-                                    ->columnSpan(1)
-
+                                    ->columnSpan(1),
 
                             ]),
-                        TextEntry::make('content')->label('')->html()
+                        TextEntry::make('content')->label('')->html(),
 
-                    ])->columnSpanFull()
-                ,
+                    ])->columnSpanFull(),
                 Actions::make([
                     FAction::make('Reply')
                         ->label('Reply')
                         ->schema([
                             FRichEditor::make('content')
                                 ->required()
-                                ->autofocus()
+                                ->autofocus(),
                             // ->extraAttributes(['style' => 'height: 400px;'])
                         ])
 
@@ -98,9 +97,8 @@ class MessageInfolist
                                 'topic_id' => $livewire->record->id,
                                 'sender_id' => auth()->id(),
                                 'content' => $data['content'],
-                                'receiver_id' => $receiverId
+                                'receiver_id' => $receiverId,
                             ]);
-
 
                             $livewire->record->load('message');
                             $livewire->refresh();
@@ -109,8 +107,7 @@ class MessageInfolist
                                 ->success()
                                 ->send();
 
-
-                        })
+                        }),
 
                 ]),
 

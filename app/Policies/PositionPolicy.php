@@ -14,7 +14,7 @@ class PositionPolicy extends BasePolicy
 
     public function view(Employee $user, Position $position): bool
     {
-        return $this->canManageHrMasterData($user)
+        return $this->canManageCompanyHrRecord($user, $position)
             || $this->canManageDepartment($user, $position->department_id);
     }
 
@@ -25,13 +25,13 @@ class PositionPolicy extends BasePolicy
 
     public function update(Employee $user, Position $position): bool
     {
-        return $this->canManageHrMasterData($user)
+        return $this->canManageCompanyHrRecord($user, $position)
             || $this->canManageDepartment($user, $position->department_id);
     }
 
     public function delete(Employee $user, Position $position): bool
     {
-        return $this->canManageHrMasterData($user);
+        return $this->canManageCompanyHrRecord($user, $position);
     }
 
     public function deleteAny(Employee $user): bool

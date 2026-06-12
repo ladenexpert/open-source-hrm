@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\Leaves;
 
+use App\Filament\Resources\Leaves\Pages\ListLeaves;
 use App\Filament\Resources\Leaves\Schemas\LeaveForm;
 use App\Filament\Resources\Leaves\Schemas\LeaveTable;
-use Filament\Schemas\Schema;
-use App\Filament\Resources\Leaves\Pages\ListLeaves;
-use App\Models\Leave;
 use App\Models\Employee;
+use App\Models\Leave;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +18,9 @@ class LeaveResource extends Resource
     protected static ?string $model = Leave::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-minus';
+
     protected static string|\UnitEnum|null $navigationGroup = 'HR Management';
+
     protected static ?int $navigationSort = 3;
 
     protected static ?string $modelLabel = 'Leave Requests';
@@ -63,6 +65,12 @@ class LeaveResource extends Resource
         if (! $user instanceof Employee) {
             return $query->whereRaw('1 = 0');
         }
+
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $query->forCompany($user->getEffectiveCompanyId());
 
         if ($user->canManageHrMasterData()) {
             return $query;

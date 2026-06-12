@@ -14,7 +14,7 @@ class MessagePolicy extends BasePolicy
 
     public function view(Employee $user, Message $message): bool
     {
-        return $this->isMessageParticipant($user, $message);
+        return $this->sharesCompany($user, $message) && $this->isMessageParticipant($user, $message);
     }
 
     public function create(Employee $user): bool
@@ -24,12 +24,14 @@ class MessagePolicy extends BasePolicy
 
     public function update(Employee $user, Message $message): bool
     {
-        return (int) $message->sender_id === (int) $user->id;
+        return $this->sharesCompany($user, $message)
+            && (int) $message->sender_id === (int) $user->id;
     }
 
     public function delete(Employee $user, Message $message): bool
     {
-        return (int) $message->sender_id === (int) $user->id;
+        return $this->sharesCompany($user, $message)
+            && (int) $message->sender_id === (int) $user->id;
     }
 
     public function deleteAny(Employee $user): bool

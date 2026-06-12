@@ -3,15 +3,17 @@
 namespace App\Providers;
 
 use App\Models\Department;
+use App\Models\Employee;
+use App\Models\Message;
+use App\Models\Task;
 use App\Observers\DepartmentObserver;
 use App\Observers\EmployeeObserver;
 use App\Observers\MessageObserver;
 use App\Observers\TaskObserver;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
-use App\Models\{Task, Message, Employee};
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,17 +40,20 @@ class AppServiceProvider extends ServiceProvider
         Employee::observe(EmployeeObserver::class);
 
     }
+
     private function configureCommands(): void
     {
         DB::prohibitDestructiveCommands(
             $this->app->environment('production')
         );
     }
+
     private function configureModels(): void
     {
         //
         Model::shouldBeStrict();
     }
+
     public function configureUrl(): void
     {
         if ($this->app->environment('production')) {

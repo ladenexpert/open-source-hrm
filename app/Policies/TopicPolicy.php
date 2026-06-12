@@ -14,7 +14,7 @@ class TopicPolicy extends BasePolicy
 
     public function view(Employee $user, Topic $topic): bool
     {
-        return $this->isParticipant($user, $topic);
+        return $this->sharesCompany($user, $topic) && $this->isParticipant($user, $topic);
     }
 
     public function create(Employee $user): bool
@@ -24,12 +24,12 @@ class TopicPolicy extends BasePolicy
 
     public function update(Employee $user, Topic $topic): bool
     {
-        return $this->isParticipant($user, $topic);
+        return $this->sharesCompany($user, $topic) && $this->isParticipant($user, $topic);
     }
 
     public function delete(Employee $user, Topic $topic): bool
     {
-        return $this->isParticipant($user, $topic);
+        return $this->sharesCompany($user, $topic) && $this->isParticipant($user, $topic);
     }
 
     public function deleteAny(Employee $user): bool

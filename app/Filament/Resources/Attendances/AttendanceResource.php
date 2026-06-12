@@ -2,22 +2,22 @@
 
 namespace App\Filament\Resources\Attendances;
 
+use App\Filament\Resources\Attendances\Pages\ListAttendances;
 use App\Filament\Resources\Attendances\Schemas\AttendanceForm;
-use Filament\Schemas\Schema;
+use App\Models\Attendance;
 use App\Models\Employee;
+use App\Models\Shift;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
-use Filament\Actions\ActionGroup;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\Attendances\Pages\ListAttendances;
-use App\Models\Attendance;
-use App\Models\Shift;
-use Filament\Resources\Resource;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,7 +29,9 @@ class AttendanceResource extends Resource
     protected static ?string $model = Attendance::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
+
     protected static string|\UnitEnum|null $navigationGroup = 'HR Management';
+
     protected static ?int $navigationSort = 2;
 
     public static function getEloquentQuery(): Builder
@@ -40,6 +42,12 @@ class AttendanceResource extends Resource
         if (! $user instanceof Employee) {
             return $query->whereRaw('1 = 0');
         }
+
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $query->forCompany($user->getEffectiveCompanyId());
 
         if ($user->canManageHrMasterData()) {
             return $query;
@@ -52,7 +60,6 @@ class AttendanceResource extends Resource
 
         return $query->where('employee_id', $user->id);
     }
-
 
     public static function form(Schema $schema): Schema
     {
@@ -94,12 +101,10 @@ class AttendanceResource extends Resource
                             'last_name',
                         ]
                     )
-                    ->label('Name')
-                ,
+                    ->label('Name'),
                 TextColumn::make('shift.name')
                     ->label('Shift')
-                    ->searchable()
-                ,
+                    ->searchable(),
                 TextColumn::make('date')
                     ->date()
 
@@ -133,30 +138,43 @@ class AttendanceResource extends Resource
                         ->searchable(
                             [
                                 'first_name',
-                                'last_name'
+                                'last_name',
                             ]
                         )
                         ->options(
-                            Employee::all()->pluck('name', 'id')
+                            fn (): array => static::getEloquentQuery()
+                                ->with('employee')
+                                ->get()
+                                ->pluck('employee.name', 'employee.id')
+                                ->filter()
+                                ->all()
                         ),
                     SelectFilter::make('shift_id')
                         ->label('Shift')
                         ->options(
-                            Shift::all()->pluck('name', 'id')
+                            fn (): array => Shift::query()
+                                ->when(
+                                    Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin(),
+                                    fn (Builder $shiftQuery): Builder => $shiftQuery->forCompany(Auth::user()->getEffectiveCompanyId()),
+                                )
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all()
                         ),
                     Filter::make('date')
                         ->schema([
                             DatePicker::make('date')
                                 ->label('Select Date')
-                                ->required()
+                                ->required(),
                             // ->default(now())
                         ])
                         ->query(function (Builder $query, array $data) {
                             if (isset($data['date'])) {
                                 return $query->whereDate('date', $data['date']);
                             }
+
                             return $query;
-                        })
+                        }),
 
                 ]
 
@@ -167,7 +185,7 @@ class AttendanceResource extends Resource
                     ViewAction::make(),
                     EditAction::make(),
                     DeleteAction::make(),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

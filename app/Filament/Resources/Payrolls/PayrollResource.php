@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Filament\Resources\Payrolls;
+
+use App\Filament\Resources\Payrolls\Pages\ListPayrolls;
 use App\Filament\Resources\Payrolls\Schema\PayrollForm;
 use App\Filament\Resources\Payrolls\Schema\PayrollTable;
-use Filament\Schemas\Schema;
-use App\Filament\Resources\Payrolls\Pages\ListPayrolls;
 use App\Models\Employee;
 use App\Models\Payroll;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -19,9 +20,11 @@ class PayrollResource extends Resource
     protected static ?string $model = Payroll::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
+
     protected static string|\BackedEnum|null $activeNavigationIcon = 'heroicon-s-banknotes';
 
     protected static string|\UnitEnum|null $navigationGroup = 'HR Management';
+
     protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema
@@ -63,6 +66,12 @@ class PayrollResource extends Resource
         if (! $user instanceof Employee) {
             return $query->whereRaw('1 = 0');
         }
+
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $query->forCompany($user->getEffectiveCompanyId());
 
         if ($user->canManagePayroll()) {
             return $query;

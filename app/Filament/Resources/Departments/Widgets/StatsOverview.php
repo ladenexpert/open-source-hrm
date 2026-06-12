@@ -2,11 +2,10 @@
 
 namespace App\Filament\Resources\Departments\Widgets;
 
+use App\Models\Department;
 use App\Models\Employee;
-use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use App\Models\Department;
 
 class StatsOverview extends BaseWidget
 {
@@ -14,6 +13,7 @@ class StatsOverview extends BaseWidget
     {
         return redirect()->to('/departments');
     }
+
     public function redirectToAdmins()
     {
         return redirect()->to('/admins');
@@ -30,7 +30,7 @@ class StatsOverview extends BaseWidget
                 ->icon('heroicon-o-rectangle-group')
                 ->extraAttributes([
                     'class' => 'cursor-pointer',
-                    'wire:click' => "redirectToDepartments()",
+                    'wire:click' => 'redirectToDepartments()',
                 ])
             // ->url(route('filament.admin.resources.departments.index')),
             ,
@@ -41,11 +41,8 @@ class StatsOverview extends BaseWidget
                 ->icon('heroicon-o-user-group')
                 ->extraAttributes([
                     'class' => 'cursor-pointer',
-                    'wire:click' => "redirectToAdmins()",
-                ])
-
-
-
+                    'wire:click' => 'redirectToAdmins()',
+                ]),
 
         ];
     }

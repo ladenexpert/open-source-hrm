@@ -3,10 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\BelongsToCompany;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -17,7 +19,9 @@ use Spatie\Permission\Traits\HasRoles;
 class Employee extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes, HasRoles;
+    use BelongsToCompany;
+
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -37,6 +41,10 @@ class Employee extends Authenticatable implements FilamentUser
         'date_of_birth',
         'gender',
         'marital_status',
+        'company_id',
+        'branch_id',
+        'work_location_id',
+        'cost_center_id',
         'department_id',
         'position_id',
         'employment_type',
@@ -59,6 +67,7 @@ class Employee extends Authenticatable implements FilamentUser
         'password',
         'remember_token',
     ];
+
     protected $appends = [
         'name',
     ];
@@ -119,6 +128,11 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->hasNormalizedRole('department_manager');
     }
 
+    public function getEffectiveCompanyId(): ?int
+    {
+        return $this->company_id ?: Company::getDefaultCompanyId();
+    }
+
     public function hasNormalizedRole(string $role): bool
     {
         $expectedRole = $this->normalizeRoleName($role);
@@ -145,6 +159,7 @@ class Employee extends Authenticatable implements FilamentUser
         }
 
         return $this->managedDepartments()
+            ->forCompany($this->getEffectiveCompanyId())
             ->whereKey($departmentId)
             ->exists();
     }
@@ -158,10 +173,27 @@ class Employee extends Authenticatable implements FilamentUser
     {
         return $this->belongsTo(Department::class, 'department_id');
     }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function workLocation(): BelongsTo
+    {
+        return $this->belongsTo(WorkLocation::class);
+    }
+
+    public function costCenter(): BelongsTo
+    {
+        return $this->belongsTo(CostCenter::class);
+    }
+
     public function position()
     {
         return $this->belongsTo(Position::class, 'position_id');
     }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -174,6 +206,10 @@ class Employee extends Authenticatable implements FilamentUser
             'date_of_birth' => 'date',
             'hire_date' => 'date',
             'termination_date' => 'date',
+            'company_id' => 'integer',
+            'branch_id' => 'integer',
+            'work_location_id' => 'integer',
+            'cost_center_id' => 'integer',
             'is_active' => 'boolean',
             'password' => 'hashed',
         ];

@@ -14,7 +14,7 @@ class PayrollPolicy extends BasePolicy
 
     public function view(Employee $user, Payroll $payroll): bool
     {
-        return $this->canManagePayroll($user)
+        return $this->canManageCompanyPayrollRecord($user, $payroll)
             || $this->isOwnEmployeeRecord($user, $payroll->employee_id);
     }
 
@@ -25,12 +25,12 @@ class PayrollPolicy extends BasePolicy
 
     public function update(Employee $user, Payroll $payroll): bool
     {
-        return $this->canManagePayroll($user);
+        return $this->canManageCompanyPayrollRecord($user, $payroll);
     }
 
     public function delete(Employee $user, Payroll $payroll): bool
     {
-        return $this->canManagePayroll($user);
+        return $this->canManageCompanyPayrollRecord($user, $payroll);
     }
 
     public function deleteAny(Employee $user): bool

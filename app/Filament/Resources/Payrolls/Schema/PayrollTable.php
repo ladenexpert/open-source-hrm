@@ -1,16 +1,24 @@
 <?php
+
 namespace App\Filament\Resources\Payrolls\Schema;
-use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\{SelectFilter, Filter};
-use Filament\Forms\Components\Select;
+
 use App\Models\Employee;
-use Filament\Actions\{BulkActionGroup, DeleteBulkAction};
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+
 class PayrollTable
 {
     public static function configure(Table $table): Table
     {
-
 
         return $table
             ->columns([
@@ -20,7 +28,6 @@ class PayrollTable
                     ->searchable(isIndividual: true)
                     ->tooltip('Employee code')
                     ->searchable(),
-
 
                 TextColumn::make('employee.name')
                     ->label('Name')
@@ -53,15 +60,13 @@ class PayrollTable
                     ->money('KSH', true),
                 TextColumn::make('status')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'pending' => 'warning',
                         'completed' => 'success',
                         'cancelled' => 'danger',
                         default => 'secondary',
                     })
                     ->label('Status'),
-
-
 
             ])
             ->filters([
@@ -86,13 +91,12 @@ class PayrollTable
 
                     ]),
 
-
             ])
             ->recordActions([
-                \Filament\Actions\ActionGroup::make([
-                    \Filament\Actions\ViewAction::make(),
-                    \Filament\Actions\EditAction::make(),
-                    \Filament\Actions\DeleteAction::make(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                    DeleteAction::make(),
                 ]),
             ])
             ->defaultSort('created_at', 'desc')
@@ -102,6 +106,4 @@ class PayrollTable
                 ]),
             ]);
     }
-
-
 }

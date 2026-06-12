@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\Admins\Pages;
 
-use Filament\Actions\CreateAction;
 use App\Filament\Resources\Admins\AdminResource;
-use Filament\Actions;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListAdmins extends ListRecords
@@ -14,7 +13,7 @@ class ListAdmins extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()
+            CreateAction::make(),
 
         ];
     }

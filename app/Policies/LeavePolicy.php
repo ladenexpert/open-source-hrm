@@ -14,7 +14,7 @@ class LeavePolicy extends BasePolicy
 
     public function view(Employee $user, Leave $leave): bool
     {
-        return $this->canManageHrMasterData($user)
+        return $this->canManageCompanyHrRecord($user, $leave)
             || $this->canAccessEmployeeOwnedRecord($user, $leave);
     }
 
@@ -25,13 +25,13 @@ class LeavePolicy extends BasePolicy
 
     public function update(Employee $user, Leave $leave): bool
     {
-        return $this->canManageHrMasterData($user)
+        return $this->canManageCompanyHrRecord($user, $leave)
             || $this->canAccessEmployeeOwnedRecord($user, $leave);
     }
 
     public function delete(Employee $user, Leave $leave): bool
     {
-        return $this->canManageHrMasterData($user);
+        return $this->canManageCompanyHrRecord($user, $leave);
     }
 
     public function deleteAny(Employee $user): bool

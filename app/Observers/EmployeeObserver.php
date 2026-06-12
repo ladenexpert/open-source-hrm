@@ -13,6 +13,7 @@ class EmployeeObserver
     {
         //
     }
+
     public function created(Employee $employee): void
     {
         //
