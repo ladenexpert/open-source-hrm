@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use App\Filament\Resources\Messages\Schemas\MessageTable;
+use Illuminate\Database\Eloquent\Builder;
 
 class MessageResource extends Resource
 {
@@ -48,6 +49,22 @@ class MessageResource extends Resource
     {
 
         return MessageTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = Auth::user();
+
+        if (! $user instanceof Employee) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function (Builder $builder) use ($user): Builder {
+            return $builder
+                ->where('creator_id', $user->id)
+                ->orWhere('receiver_id', $user->id);
+        });
     }
 
 

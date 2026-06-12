@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\Auth\Register;
 use Filament\Pages\Dashboard;
 use App\Filament\Pages\TaskBoard;
 use App\Filament\Resources\Departments\Widgets\StatsOverview;
@@ -35,8 +34,6 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->profile()
             ->login()
-
-            ->registration(Register::class)
             ->databaseNotifications()
             ->authPasswordBroker('employees')
             ->brandName(
@@ -64,7 +61,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                'role:admin'
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -76,7 +72,6 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                // 'role:admin'
             ]);
 
     }

@@ -13,9 +13,16 @@ class RolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        //
-        $admin = Role::firstOrCreate(['name' => 'admin']);
-        $employee = Role::firstOrCreate(['name' => 'employee']);
-        $employee = Role::firstOrCreate(['name' => 'guest']);
+        foreach ([
+            'super_admin',
+            'admin',
+            'hr',
+            'finance',
+            'department_manager',
+            'employee',
+            'guest',
+        ] as $role) {
+            Role::findOrCreate($role, 'web');
+        }
     }
 }

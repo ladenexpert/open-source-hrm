@@ -52,7 +52,7 @@ class EmployeeForm
                                 TextInput::make('email')
                                     ->email()
                                     ->required()
-                                    ->label('Email Address (this will be the default password for the user )')
+                                    ->label('Email Address')
                                     ->unique(ignoreRecord: true)
                                     ->copyable()
                                 ,
@@ -166,6 +166,21 @@ class EmployeeForm
                                         'Casual' => 'Casual',
                                     ])
                                     ->required(),
+                                TextInput::make('password')
+                                    ->label('Password')
+                                    ->password()
+                                    ->revealable()
+                                    ->dehydrated(fn (?string $state): bool => filled($state))
+                                    ->required(fn (string $operation): bool => $operation === 'create')
+                                    ->minLength(8)
+                                    ->same('password_confirmation'),
+                                TextInput::make('password_confirmation')
+                                    ->label('Confirm Password')
+                                    ->password()
+                                    ->revealable()
+                                    ->dehydrated(false)
+                                    ->required(fn (string $operation): bool => $operation === 'create')
+                                    ->minLength(8),
                                 DatePicker::make('hire_date')->required(),
                                 DatePicker::make('termination_date'),
                                 Toggle::make('is_active')->default(true),

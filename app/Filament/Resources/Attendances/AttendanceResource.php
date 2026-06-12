@@ -22,6 +22,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceResource extends Resource
 {
@@ -30,6 +31,27 @@ class AttendanceResource extends Resource
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
     protected static string|\UnitEnum|null $navigationGroup = 'HR Management';
     protected static ?int $navigationSort = 2;
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = Auth::user();
+
+        if (! $user instanceof Employee) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->canManageHrMasterData()) {
+            return $query;
+        }
+
+        if ($user->isDepartmentManager()) {
+            return $query->whereHas('employee', fn (Builder $employeeQuery): Builder => $employeeQuery
+                ->whereIn('department_id', $user->managedDepartments()->select('id')));
+        }
+
+        return $query->where('employee_id', $user->id);
+    }
 
 
     public static function form(Schema $schema): Schema

@@ -12,6 +12,8 @@ use App\Models\Employee;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+
 class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
@@ -29,11 +31,15 @@ class EmployeeResource extends Resource
     {
         return EmployeeTable::configure($table)
             ->modifyQueryUsing(
-                function (Builder $query) {
-                    $query->role('employee')->withoutRole('admin');
+                function (Builder $query): Builder {
+                    return static::scopeStandardEmployees($query);
                 }
-            )
-        ;
+            );
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return static::scopeAuthorizedEmployees(parent::getEloquentQuery());
     }
 
     public static function getRelations(): array
@@ -51,5 +57,37 @@ class EmployeeResource extends Resource
             'view' => ViewEmployee::route('/{record}'),
             'edit' => EditEmployee::route('/{record}/edit'),
         ];
+    }
+
+    protected static function scopeAuthorizedEmployees(Builder $query): Builder
+    {
+        $user = Auth::user();
+
+        if (! $user instanceof Employee) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->canManageHrMasterData()) {
+            return $query;
+        }
+
+        if ($user->isDepartmentManager()) {
+            return $query->whereIn('department_id', $user->managedDepartments()->select('id'));
+        }
+
+        return $query->whereKey($user->id);
+    }
+
+    protected static function scopeStandardEmployees(Builder $query): Builder
+    {
+        return static::scopeAuthorizedEmployees($query)
+            ->whereHas('roles', fn (Builder $roleQuery): Builder => $roleQuery->where('name', 'employee'))
+            ->whereDoesntHave('roles', fn (Builder $roleQuery): Builder => $roleQuery->whereIn('name', [
+                'super_admin',
+                'admin',
+                'hr',
+                'finance',
+                'department_manager',
+            ]));
     }
 }

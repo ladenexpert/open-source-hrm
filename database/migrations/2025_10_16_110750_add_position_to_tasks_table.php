@@ -11,8 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
-            //
-            $table->flowforgePositionColumn('position');
+            $table->unsignedInteger('position')->nullable()->after('due_date');
         });
     }
 

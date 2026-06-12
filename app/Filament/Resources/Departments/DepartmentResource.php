@@ -6,11 +6,14 @@ use App\Filament\Resources\Departments\Schemas\DepartmentTable;
 use Filament\Schemas\Schema;
 use App\Filament\Resources\Departments\Pages\ListDepartments;
 use App\Models\Department;
+use App\Models\Employee;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use App\Filament\Resources\Departments\Schemas\DepartmentForm;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class DepartmentResource extends Resource
 {
@@ -26,7 +29,13 @@ class DepartmentResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return DepartmentTable::configure($table);
+        return DepartmentTable::configure($table)
+            ->modifyQueryUsing(fn (Builder $query): Builder => static::scopeEloquentQuery($query));
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return static::scopeEloquentQuery(parent::getEloquentQuery());
     }
 
     public static function getRelations(): array
@@ -45,4 +54,22 @@ class DepartmentResource extends Resource
         ];
     }
 
+    protected static function scopeEloquentQuery(Builder $query): Builder
+    {
+        $user = Auth::user();
+
+        if (! $user instanceof Employee) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->canManageHrMasterData()) {
+            return $query;
+        }
+
+        if ($user->isDepartmentManager()) {
+            return $query->whereIn('id', $user->managedDepartments()->select('id'));
+        }
+
+        return $query->whereRaw('1 = 0');
+    }
 }

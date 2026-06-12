@@ -48,7 +48,6 @@ class AppServiceProvider extends ServiceProvider
     {
         //
         Model::shouldBeStrict();
-        Model::unguard();
     }
     public function configureUrl(): void
     {

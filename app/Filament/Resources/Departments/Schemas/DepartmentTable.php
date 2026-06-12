@@ -30,7 +30,7 @@ class DepartmentTable
                     ->limit(50)
                     ->label('Description'),
                 TextColumn::make('manager_id')
-                    ->formatStateUsing(fn($record) => $record->manager?->full_name ?? 'No Manager')
+                    ->formatStateUsing(fn ($record) => $record->manager?->name ?? 'No Manager')
                     ->label('Manager')
                     ->searchable()
                     ->sortable()

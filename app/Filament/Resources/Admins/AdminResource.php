@@ -11,7 +11,9 @@ use App\Filament\Resources\Admins\Pages\ListAdmins;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
 use App\Models\Employee;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 
 
@@ -26,9 +28,7 @@ class AdminResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return AdminForm::configure($schema, )
-
-        ;
+        return AdminForm::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -38,8 +38,49 @@ class AdminResource extends Resource
                 function (Builder $query) {
                     $query->role('admin');
                 }
-            )
-        ;
+            );
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->role('admin');
+    }
+
+    public static function canAccess(): bool
+    {
+        return static::userCanManageAdmins();
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::userCanManageAdmins();
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::userCanManageAdmins();
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return static::userCanManageAdmins()
+            && $record instanceof Employee
+            && $record->hasNormalizedRole('admin');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return static::canView($record);
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::canView($record);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return static::userCanManageAdmins();
     }
 
     public static function getRelations(): array
@@ -57,5 +98,12 @@ class AdminResource extends Resource
             'view' => ViewAdmin::route('/{record}'),
             'edit' => EditAdmin::route('/{record}/edit'),
         ];
+    }
+
+    protected static function userCanManageAdmins(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof Employee && $user->canManageHrMasterData();
     }
 }
