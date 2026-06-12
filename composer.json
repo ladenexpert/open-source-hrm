@@ -14,7 +14,7 @@
         "guava/calendar": "^2.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "relaticle/flowforge": "^2.0",
+        "openspout/openspout": "^4.28.5",
         "spatie/laravel-permission": "^6.23"
     },
     "require-dev": {
@@ -24,7 +24,7 @@
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^12.4"
+        "phpunit/phpunit": "^11.5.50"
     },
     "autoload": {
         "psr-4": {
