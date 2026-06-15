@@ -120,6 +120,20 @@ abstract class BasePolicy
             && $this->canManageDepartment($user, $employee->department_id);
     }
 
+    protected function sharesCompanyOrGroupScope(Employee $user, Model $record): bool
+    {
+        $recordCompanyId = $record->getAttribute('company_id');
+
+        if (filled($recordCompanyId) && $user->canAccessCompany((int) $recordCompanyId)) {
+            return true;
+        }
+
+        $recordCompanyGroupId = $record->getAttribute('company_group_id');
+
+        return filled($recordCompanyGroupId)
+            && $user->canAccessCompanyGroup((int) $recordCompanyGroupId);
+    }
+
     protected function canAccessEmployeeOwnedRecord(
         Employee $user,
         Model $record,

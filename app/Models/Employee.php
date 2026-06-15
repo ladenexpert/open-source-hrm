@@ -155,8 +155,15 @@ class Employee extends Authenticatable implements FilamentUser
             'super_admin',
             'admin',
             'hr',
+            'hr_admin',
+            'hr_head',
             'finance',
+            'finance_admin',
+            'finance_head',
             'department_manager',
+            'department_head',
+            'leader',
+            'company_head',
         ]);
     }
 
@@ -166,6 +173,8 @@ class Employee extends Authenticatable implements FilamentUser
             'super_admin',
             'admin',
             'hr',
+            'hr_admin',
+            'hr_head',
         ]);
     }
 
@@ -174,6 +183,8 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->hasAnyNormalizedRole([
             'super_admin',
             'finance',
+            'finance_admin',
+            'finance_head',
         ]);
     }
 
@@ -184,7 +195,11 @@ class Employee extends Authenticatable implements FilamentUser
 
     public function isDepartmentManager(): bool
     {
-        return $this->hasNormalizedRole('department_manager');
+        return $this->hasAnyNormalizedRole([
+            'department_manager',
+            'department_head',
+            'leader',
+        ]);
     }
 
     public function getEffectiveCompanyId(): ?int

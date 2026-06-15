@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Models\Attendance;
+use App\Models\ApprovalLog;
+use App\Models\ApprovalRequest;
+use App\Models\ApprovalWorkflow;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\CompanyGroup;
@@ -32,6 +35,9 @@ use App\Models\WorkLocation;
 use App\Models\Bank;
 use App\Models\ContractType;
 use App\Policies\AttendancePolicy;
+use App\Policies\ApprovalLogPolicy;
+use App\Policies\ApprovalRequestPolicy;
+use App\Policies\ApprovalWorkflowPolicy;
 use App\Policies\BranchPolicy;
 use App\Policies\CompanyPolicy;
 use App\Policies\CompanyGroupPolicy;
@@ -79,6 +85,9 @@ class AuthServiceProvider extends ServiceProvider
         Position::class => PositionPolicy::class,
         Shift::class => ShiftPolicy::class,
         Attendance::class => AttendancePolicy::class,
+        ApprovalWorkflow::class => ApprovalWorkflowPolicy::class,
+        ApprovalRequest::class => ApprovalRequestPolicy::class,
+        ApprovalLog::class => ApprovalLogPolicy::class,
         Leave::class => LeavePolicy::class,
         Payroll::class => PayrollPolicy::class,
         Message::class => MessagePolicy::class,
