@@ -36,18 +36,26 @@ class WorkLocationResource extends Resource
         return $schema->components([
             Select::make('company_id')
                 ->label('Company')
-                ->options(fn (): array => Company::query()->orderBy('name')->pluck('name', 'id')->all())
+                ->options(function (): array {
+                    $user = Auth::user();
+
+                    if ($user instanceof Employee && ! $user->isSuperAdmin()) {
+                        return $user->accessibleCompaniesQuery()->orderBy('name')->pluck('name', 'id')->all();
+                    }
+
+                    return Company::query()->orderBy('name')->pluck('name', 'id')->all();
+                })
                 ->default(fn (): ?int => Auth::user() instanceof Employee ? Auth::user()->getEffectiveCompanyId() : Company::getDefaultCompanyId())
                 ->required()
-                ->disabled(fn (): bool => Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin())
-                ->dehydrated(),
+                ->searchable()
+                ->preload(),
             Select::make('branch_id')
                 ->label('Branch')
                 ->options(function (): array {
                     $query = Branch::query()->orderBy('name');
 
                     if (Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin()) {
-                        $query->forCompany(Auth::user()->getEffectiveCompanyId());
+                        $query->forCompanies(Auth::user()->accessibleCompanyIds());
                     }
 
                     return $query->pluck('name', 'id')->all();
@@ -85,7 +93,7 @@ class WorkLocationResource extends Resource
             return $query;
         }
 
-        return $query->forCompany($user->getEffectiveCompanyId());
+        return $query->forCompanies($user->accessibleCompanyIds());
     }
 
     public static function canAccess(): bool

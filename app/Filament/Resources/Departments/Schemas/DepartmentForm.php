@@ -19,11 +19,19 @@ class DepartmentForm
                 //
                 Select::make('company_id')
                     ->label('Company')
-                    ->options(fn (): array => Company::query()->orderBy('name')->pluck('name', 'id')->all())
+                    ->options(function (): array {
+                        $user = auth()->user();
+
+                        if ($user instanceof Employee && ! $user->isSuperAdmin()) {
+                            return $user->accessibleCompaniesQuery()->orderBy('name')->pluck('name', 'id')->all();
+                        }
+
+                        return Company::query()->orderBy('name')->pluck('name', 'id')->all();
+                    })
                     ->default(fn (): ?int => auth()->user() instanceof Employee ? auth()->user()->getEffectiveCompanyId() : Company::getDefaultCompanyId())
                     ->required()
-                    ->disabled(fn (): bool => auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin())
-                    ->dehydrated(),
+                    ->searchable()
+                    ->preload(),
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255)
@@ -42,7 +50,7 @@ class DepartmentForm
                         $query = Employee::query()->orderBy('first_name');
 
                         if (auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin()) {
-                            $query->forCompany(auth()->user()->getEffectiveCompanyId());
+                            $query->forCompanies(auth()->user()->accessibleCompanyIds());
                         }
 
                         return $query->get()->pluck('name', 'id')->all();
@@ -59,7 +67,7 @@ class DepartmentForm
                         $query = Branch::query()->orderBy('name');
 
                         if (auth()->user() instanceof Employee && ! auth()->user()->isSuperAdmin()) {
-                            $query->forCompany(auth()->user()->getEffectiveCompanyId());
+                            $query->forCompanies(auth()->user()->accessibleCompanyIds());
                         }
 
                         return $query->pluck('name', 'id')->all();

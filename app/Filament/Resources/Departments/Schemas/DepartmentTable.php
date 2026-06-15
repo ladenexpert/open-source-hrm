@@ -40,6 +40,12 @@ class DepartmentTable
                     ->searchable()
                     ->sortable()
                     ->toggleable(),
+                TextColumn::make('branch.name')
+                    ->label('Branch')
+                    ->toggleable(),
+                TextColumn::make('company.name')
+                    ->label('Company')
+                    ->toggleable(),
             ])
             ->filters([
                 //

@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Employees\Schemas;
 
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\EmploymentStatus;
+use App\Models\EmploymentType;
 use App\Models\Position;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -47,28 +49,47 @@ class EmployeeTable
                         ->options(
                             fn () => Department::query()
                                 ->when(
-                                    Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin(),
-                                    fn (Builder $query): Builder => $query->forCompany(Auth::user()->getEffectiveCompanyId()),
+                                Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin(),
+                                    fn (Builder $query): Builder => $query->forCompanies(Auth::user()->accessibleCompanyIds()),
                                 )
                                 ->orderBy('name')
                                 ->pluck('name', 'id')
                                 ->all()
                         )
                         ->searchable(),
-                    SelectFilter::make('employment_type')
+                    SelectFilter::make('employment_type_id')
                         ->label('Employment Type')
-                        ->options([
-                            'Permanent' => 'Permanent',
-                            'Contract' => 'Contract',
-                            'Casual' => 'Casual',
-                        ]),
+                        ->options(
+                            EmploymentType::query()
+                                ->when(
+                                    Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin(),
+                                    fn (Builder $query): Builder => $query->visibleTo(Auth::user()),
+                                )
+                                ->orderBy('sort_order')
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all()
+                        ),
+                    SelectFilter::make('employment_status_id')
+                        ->label('Employment Status')
+                        ->options(
+                            EmploymentStatus::query()
+                                ->when(
+                                    Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin(),
+                                    fn (Builder $query): Builder => $query->visibleTo(Auth::user()),
+                                )
+                                ->orderBy('sort_order')
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all()
+                        ),
                     SelectFilter::make('position_id')
                         ->label('Position')
                         ->options(
                             Position::query()
                                 ->when(
                                     Auth::user() instanceof Employee && ! Auth::user()->isSuperAdmin(),
-                                    fn (Builder $query): Builder => $query->forCompany(Auth::user()->getEffectiveCompanyId()),
+                                    fn (Builder $query): Builder => $query->forCompanies(Auth::user()->accessibleCompanyIds()),
                                 )
                                 ->orderBy('title')
                                 ->pluck('title', 'id')
@@ -95,18 +116,31 @@ class EmployeeTable
                         ]
                     )
                     ->sortable([
-                        'first_name',
-                        'last_name',
+                        'full_name',
                     ]),
+                TextColumn::make('company.name')
+                    ->label('Company')
+                    ->toggleable(),
                 TextColumn::make('department.name')
                     ->label('Department')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('division.name')
+                    ->label('Division')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('position.title')
                     ->label('Position')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
+                TextColumn::make('employmentStatus.name')
+                    ->label('Employment Status')
+                    ->badge()
+                    ->toggleable(),
+                TextColumn::make('employmentType.name')
+                    ->label('Employment Type')
+                    ->badge()
+                    ->toggleable(),
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
@@ -127,7 +161,7 @@ class EmployeeTable
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 TextColumn::make('employment_type')
-                    ->label('Employment Type')
+                    ->label('Legacy Employment Type')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),

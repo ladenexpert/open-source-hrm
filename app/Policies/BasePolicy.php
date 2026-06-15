@@ -52,14 +52,56 @@ abstract class BasePolicy
             && (int) $recordCompanyId === (int) $this->companyIdFor($user);
     }
 
+    protected function sharesHrScope(Employee $user, Model $record, string $companyColumn = 'company_id'): bool
+    {
+        $recordCompanyId = $record->getAttribute($companyColumn);
+
+        if (blank($recordCompanyId) && method_exists($record, 'company')) {
+            $recordCompanyId = $record->company?->getKey();
+        }
+
+        return filled($recordCompanyId) && $user->canAccessCompany((int) $recordCompanyId);
+    }
+
     protected function canManageCompanyHrRecord(Employee $user, Model $record): bool
     {
-        return $this->canManageHrMasterData($user) && $this->sharesCompany($user, $record);
+        return $this->canManageHrMasterData($user) && $this->sharesHrScope($user, $record);
     }
 
     protected function canManageCompanyPayrollRecord(Employee $user, Model $record): bool
     {
         return $this->canManagePayroll($user) && $this->sharesCompany($user, $record);
+    }
+
+    protected function canViewScopedMasterDataRecord(Employee $user, Model $record): bool
+    {
+        if (! $this->canManageHrMasterData($user)) {
+            return false;
+        }
+
+        if (blank($record->getAttribute('company_id')) && blank($record->getAttribute('company_group_id'))) {
+            return true;
+        }
+
+        return $this->canManageScopedMasterDataRecord($user, $record);
+    }
+
+    protected function canManageScopedMasterDataRecord(Employee $user, Model $record): bool
+    {
+        if (! $this->canManageHrMasterData($user)) {
+            return false;
+        }
+
+        $recordCompanyId = $record->getAttribute('company_id');
+
+        if (filled($recordCompanyId) && $user->canAccessCompany((int) $recordCompanyId)) {
+            return true;
+        }
+
+        $recordCompanyGroupId = $record->getAttribute('company_group_id');
+
+        return filled($recordCompanyGroupId)
+            && $user->canAccessCompanyGroup((int) $recordCompanyGroupId);
     }
 
     protected function isOwnEmployeeRecord(Employee $user, ?int $employeeId): bool

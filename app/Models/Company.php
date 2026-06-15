@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -13,6 +14,8 @@ class Company extends Model
     public const DEFAULT_CODE = 'DEFAULT';
 
     protected $fillable = [
+        'company_group_id',
+        'parent_company_id',
         'code',
         'name',
         'legal_name',
@@ -20,10 +23,15 @@ class Company extends Model
         'phone',
         'address',
         'tax_id',
+        'company_type',
+        'is_legal_entity',
         'is_active',
     ];
 
     protected $casts = [
+        'company_group_id' => 'integer',
+        'parent_company_id' => 'integer',
+        'is_legal_entity' => 'boolean',
         'is_active' => 'boolean',
     ];
 
@@ -31,8 +39,10 @@ class Company extends Model
     {
         return [
             'code' => self::DEFAULT_CODE,
-            'name' => 'Default Company',
-            'legal_name' => 'Default Company',
+            'name' => 'Default Holding Company',
+            'legal_name' => 'Default Holding Company',
+            'company_type' => 'holding',
+            'is_legal_entity' => true,
             'is_active' => true,
         ];
     }
@@ -63,6 +73,21 @@ class Company extends Model
         return $this->hasMany(Branch::class);
     }
 
+    public function companyGroup(): BelongsTo
+    {
+        return $this->belongsTo(CompanyGroup::class);
+    }
+
+    public function parentCompany(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_company_id');
+    }
+
+    public function subsidiaries(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_company_id');
+    }
+
     public function workLocations(): HasMany
     {
         return $this->hasMany(WorkLocation::class);
@@ -86,6 +111,11 @@ class Company extends Model
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class);
+    }
+
+    public function hostedEmployees(): HasMany
+    {
+        return $this->hasMany(Employee::class, 'host_company_id');
     }
 
     public function departments(): HasMany

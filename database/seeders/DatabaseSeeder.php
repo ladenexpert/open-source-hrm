@@ -14,5 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolePermissionSeeder::class);
         $this->call(TenancySeeder::class);
+        $this->call(HrMasterDataSeeder::class);
+        $this->call(SampleWorkforceSeeder::class);
     }
 }

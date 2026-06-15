@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\Payrolls\PayrollResource;
 use App\Models\Attendance;
+use App\Models\Company;
+use App\Models\CompanyGroup;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Event;
@@ -232,9 +234,12 @@ class SecurityAuthorizationTest extends TestCase
 
         $employee = Employee::create(array_merge([
             'employee_code' => sprintf('EMP-S-%03d', $sequence),
+            'full_name' => "Security User {$sequence}",
             'first_name' => 'Security',
             'last_name' => "User {$sequence}",
             'email' => sprintf('security-%03d@example.com', $sequence),
+            'company_id' => Company::query()->where('code', Company::DEFAULT_CODE)->value('id'),
+            'company_group_id' => CompanyGroup::query()->where('code', CompanyGroup::DEFAULT_CODE)->value('id'),
             'employment_type' => 'Permanent',
             'hire_date' => now()->toDateString(),
             'is_active' => true,

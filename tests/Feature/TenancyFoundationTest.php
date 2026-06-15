@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
+use App\Models\CompanyGroup;
 use App\Models\Employee;
 use App\Models\Leave;
 use App\Models\Payroll;
@@ -31,6 +32,10 @@ class TenancyFoundationTest extends TestCase
         $company = Company::query()->where('code', Company::DEFAULT_CODE)->first();
 
         $this->assertNotNull($company);
+        $this->assertDatabaseHas('company_groups', ['code' => CompanyGroup::DEFAULT_CODE]);
+        $this->assertNotNull($company->company_group_id);
+        $this->assertDatabaseHas('companies', ['code' => 'SUB-A']);
+        $this->assertDatabaseHas('companies', ['code' => 'SUB-B']);
         $this->assertDatabaseHas('branches', ['company_id' => $company->id, 'code' => 'HQ']);
         $this->assertDatabaseHas('work_locations', ['company_id' => $company->id, 'code' => 'HQ-LOC']);
         $this->assertDatabaseHas('cost_centers', ['company_id' => $company->id, 'code' => 'GENERAL']);

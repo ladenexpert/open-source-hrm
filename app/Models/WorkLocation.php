@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 class WorkLocation extends Model
 {
@@ -21,9 +22,27 @@ class WorkLocation extends Model
     ];
 
     protected $casts = [
+        'company_id' => 'integer',
         'is_active' => 'boolean',
         'branch_id' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $workLocation): void {
+            if (blank($workLocation->branch_id)) {
+                return;
+            }
+
+            $branchCompanyId = Branch::query()->whereKey($workLocation->branch_id)->value('company_id');
+
+            if (filled($branchCompanyId) && filled($workLocation->company_id) && (int) $branchCompanyId !== (int) $workLocation->company_id) {
+                throw ValidationException::withMessages([
+                    'branch_id' => 'The selected branch must belong to the selected company.',
+                ]);
+            }
+        });
+    }
 
     protected function resolveCompanyIdForCreation(): ?int
     {

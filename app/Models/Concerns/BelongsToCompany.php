@@ -42,6 +42,20 @@ trait BelongsToCompany
         return $query->where($this->qualifyColumn('company_id'), $resolvedCompanyId);
     }
 
+    public function scopeForCompanies(Builder $query, array $companyIds): Builder
+    {
+        $companyIds = array_values(array_filter(array_map(
+            static fn ($companyId): ?int => filled($companyId) ? (int) $companyId : null,
+            $companyIds,
+        )));
+
+        if ($companyIds === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereIn($this->qualifyColumn('company_id'), $companyIds);
+    }
+
     public function belongsToCompany(Company|int|null $companyId): bool
     {
         $resolvedCompanyId = $companyId instanceof Company ? $companyId->getKey() : $companyId;

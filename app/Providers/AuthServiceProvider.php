@@ -5,24 +5,36 @@ namespace App\Providers;
 use App\Models\Attendance;
 use App\Models\Branch;
 use App\Models\Company;
+use App\Models\CompanyGroup;
 use App\Models\CompanySetting;
 use App\Models\CompanySubscription;
 use App\Models\CostCenter;
 use App\Models\Department;
+use App\Models\Division;
 use App\Models\Employee;
+use App\Models\EmploymentStatus;
+use App\Models\EmploymentType;
 use App\Models\Event;
+use App\Models\IdentityType;
+use App\Models\JobGrade;
+use App\Models\JobLevel;
 use App\Models\Leave;
+use App\Models\MaritalStatus;
 use App\Models\Message;
 use App\Models\Payroll;
 use App\Models\Position;
+use App\Models\Religion;
 use App\Models\Shift;
 use App\Models\SubscriptionPlan;
 use App\Models\Task;
 use App\Models\Topic;
 use App\Models\WorkLocation;
+use App\Models\Bank;
+use App\Models\ContractType;
 use App\Policies\AttendancePolicy;
 use App\Policies\BranchPolicy;
 use App\Policies\CompanyPolicy;
+use App\Policies\CompanyGroupPolicy;
 use App\Policies\CompanySettingPolicy;
 use App\Policies\CompanySubscriptionPolicy;
 use App\Policies\CostCenterPolicy;
@@ -33,6 +45,7 @@ use App\Policies\LeavePolicy;
 use App\Policies\MessagePolicy;
 use App\Policies\PayrollPolicy;
 use App\Policies\PositionPolicy;
+use App\Policies\ScopedMasterDataPolicy;
 use App\Policies\ShiftPolicy;
 use App\Policies\SubscriptionPlanPolicy;
 use App\Policies\TaskPolicy;
@@ -44,9 +57,20 @@ class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
         Company::class => CompanyPolicy::class,
+        CompanyGroup::class => CompanyGroupPolicy::class,
         Branch::class => BranchPolicy::class,
         WorkLocation::class => WorkLocationPolicy::class,
         CostCenter::class => CostCenterPolicy::class,
+        Division::class => ScopedMasterDataPolicy::class,
+        JobLevel::class => ScopedMasterDataPolicy::class,
+        JobGrade::class => ScopedMasterDataPolicy::class,
+        EmploymentStatus::class => ScopedMasterDataPolicy::class,
+        EmploymentType::class => ScopedMasterDataPolicy::class,
+        ContractType::class => ScopedMasterDataPolicy::class,
+        IdentityType::class => ScopedMasterDataPolicy::class,
+        Bank::class => ScopedMasterDataPolicy::class,
+        Religion::class => ScopedMasterDataPolicy::class,
+        MaritalStatus::class => ScopedMasterDataPolicy::class,
         CompanySetting::class => CompanySettingPolicy::class,
         SubscriptionPlan::class => SubscriptionPlanPolicy::class,
         CompanySubscription::class => CompanySubscriptionPolicy::class,

@@ -48,8 +48,8 @@ class DepartmentResource extends Resource
     {
         return [
             'index' => ListDepartments::route('/'),
-            // 'create' => Pages\CreateDepartment::route('/create'),
-            // 'edit' => Pages\EditDepartment::route('/{record}/edit'),
+            'create' => Pages\CreateDepartment::route('/create'),
+            'edit' => Pages\EditDepartment::route('/{record}/edit'),
         ];
     }
 
@@ -65,14 +65,14 @@ class DepartmentResource extends Resource
             return $query;
         }
 
-        $query->forCompany($user->getEffectiveCompanyId());
-
         if ($user->canManageHrMasterData()) {
-            return $query;
+            return $query->forCompanies($user->accessibleCompanyIds());
         }
 
         if ($user->isDepartmentManager()) {
-            return $query->whereIn('id', $user->managedDepartments()->select('id'));
+            return $query
+                ->forCompany($user->getEffectiveCompanyId())
+                ->whereIn('id', $user->managedDepartments()->select('id'));
         }
 
         return $query->whereRaw('1 = 0');

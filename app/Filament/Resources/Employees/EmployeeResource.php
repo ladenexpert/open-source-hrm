@@ -73,14 +73,14 @@ class EmployeeResource extends Resource
             return $query;
         }
 
-        $query->forCompany($user->getEffectiveCompanyId());
-
         if ($user->canManageHrMasterData()) {
-            return $query;
+            return $query->forCompanies($user->accessibleCompanyIds());
         }
 
         if ($user->isDepartmentManager()) {
-            return $query->whereIn('department_id', $user->managedDepartments()->select('id'));
+            return $query
+                ->forCompany($user->getEffectiveCompanyId())
+                ->whereIn('department_id', $user->managedDepartments()->select('id'));
         }
 
         return $query->whereKey($user->id);

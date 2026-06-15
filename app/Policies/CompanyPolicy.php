@@ -9,13 +9,13 @@ class CompanyPolicy extends BasePolicy
 {
     public function viewAny(Employee $user): bool
     {
-        return $user->isSuperAdmin();
+        return $this->canManageHrMasterData($user);
     }
 
     public function view(Employee $user, Company $company): bool
     {
         return $user->isSuperAdmin()
-            || ($this->canManageHrMasterData($user) && (int) $company->id === (int) $this->companyIdFor($user));
+            || ($this->canManageHrMasterData($user) && $user->canAccessCompany($company->id));
     }
 
     public function create(Employee $user): bool
@@ -25,7 +25,8 @@ class CompanyPolicy extends BasePolicy
 
     public function update(Employee $user, Company $company): bool
     {
-        return $this->view($user, $company);
+        return $user->isSuperAdmin()
+            || ($this->canManageHrMasterData($user) && $user->canAccessCompany($company->id));
     }
 
     public function delete(Employee $user, Company $company): bool
