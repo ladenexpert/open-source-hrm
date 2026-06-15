@@ -22,14 +22,13 @@
 - Company Subscriptions
 - Company-scoped models, policies, and resources
 
-## Planned
-
-### Sprint 3
+### v1.2-indonesian-hr-foundation
 - Indonesian HR Master Data
 - Organization Structure Foundation
 - Employee Indonesian Profile Fields
 - Expatriate/Korean Workforce Readiness
 
+## Planned Next
 ### Sprint 4
 - Leave Enterprise
 
@@ -47,21 +46,3 @@
 
 ### Sprint 9
 - BPJS / PPh21 / THR Foundation
-
-### Sprint 10
-- Import / Export & UX Enhancement
-
-### Sprint 11
-- Recruitment
-
-### Sprint 12
-- Performance Management
-
-### Sprint 13
-- Learning Management
-
-### Sprint 14
-- Reimbursement & Loan
-
-### Sprint 15
-- SaaS Billing

@@ -32,8 +32,18 @@
 - Company Subscriptions
 - Company-scoped models/policies/resources
 
+### v1.2-indonesian-hr-foundation
+- Indonesian HR master data
+- Organization structure foundation
+- Expatriate readiness baseline
+
 ## Current Sprint
-Sprint 3 – Indonesian HR Master Data
+Sprint 3.5 - Baseline Operational Readiness
 
 ## Next Sprint
-Sprint 4 – Leave Enterprise
+Sprint 4 - Leave Enterprise
+
+## Local Demo Credentials
+- Local, demo, and testing environments only
+- Admin panel: `admin@hrms.local` / `Password123!`
+- Employee portal: `employee@hrms.local` / `Password123!`
