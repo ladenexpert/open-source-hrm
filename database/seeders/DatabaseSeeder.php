@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SampleWorkforceSeeder::class);
         $this->call(ApprovalWorkflowSeeder::class);
         $this->call(LeaveFoundationSeeder::class);
+        $this->call(LeaveBalanceSeeder::class);
 
         if (app()->environment(['local', 'testing'])) {
             $this->call(DemoUserSeeder::class);

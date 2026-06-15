@@ -408,6 +408,16 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->belongsTo(Company::class, 'host_company_id');
     }
 
+    public function leaveEntitlements(): HasMany
+    {
+        return $this->hasMany(LeaveEntitlement::class);
+    }
+
+    public function leaveTransactions(): HasMany
+    {
+        return $this->hasMany(LeaveTransaction::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

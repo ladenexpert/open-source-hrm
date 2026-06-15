@@ -171,8 +171,45 @@ php artisan test - passed
 Next planned sprint:
 Sprint 4B - Leave Balance
 
+Sprint 4B Completion
+
+Milestone candidate:
+v1.3.1-leave-balance
+
+Tables added:
+leave_entitlements
+leave_transactions
+
+Models added:
+LeaveEntitlement
+LeaveTransaction
+
+Services added:
+LeaveBalanceService
+LeaveEntitlementService
+
+Resources added:
+LeaveEntitlementResource
+LeaveTransactionResource
+
+Seeders added:
+LeaveBalanceSeeder
+
+Tests added:
+LeaveBalanceSprint4BTest
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize:clear - passed
+php artisan migrate:fresh --seed - passed
+php artisan test - passed
+
+Next planned sprint:
+Sprint 4C - Leave Request
+
 Next Sprint
-Sprint 4B - Leave Balance
+Sprint 4C - Leave Request
 
 Sprint 4 prerequisites already completed:
 

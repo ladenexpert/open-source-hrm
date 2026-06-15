@@ -153,6 +153,16 @@ class Company extends Model
         return $this->hasMany(LeavePolicy::class);
     }
 
+    public function leaveEntitlements(): HasMany
+    {
+        return $this->hasMany(LeaveEntitlement::class);
+    }
+
+    public function leaveTransactions(): HasMany
+    {
+        return $this->hasMany(LeaveTransaction::class);
+    }
+
     public function holidayCalendars(): HasMany
     {
         return $this->hasMany(HolidayCalendar::class);

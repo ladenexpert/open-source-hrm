@@ -24,7 +24,9 @@ use App\Models\JobLevel;
 use App\Models\Holiday;
 use App\Models\HolidayCalendar;
 use App\Models\Leave;
+use App\Models\LeaveEntitlement;
 use App\Models\LeavePolicy as LeavePolicyModel;
+use App\Models\LeaveTransaction;
 use App\Models\LeaveType;
 use App\Models\MaritalStatus;
 use App\Models\Message;
@@ -55,7 +57,9 @@ use App\Policies\EventPolicy;
 use App\Policies\HolidayCalendarPolicy;
 use App\Policies\HolidayPolicy;
 use App\Policies\LeavePolicy;
+use App\Policies\LeaveEntitlementPolicy;
 use App\Policies\LeavePolicyRecordPolicy;
+use App\Policies\LeaveTransactionPolicy;
 use App\Policies\LeaveTypePolicy;
 use App\Policies\MessagePolicy;
 use App\Policies\PayrollPolicy;
@@ -101,6 +105,8 @@ class AuthServiceProvider extends ServiceProvider
         Leave::class => LeavePolicy::class,
         LeaveType::class => LeaveTypePolicy::class,
         LeavePolicyModel::class => LeavePolicyRecordPolicy::class,
+        LeaveEntitlement::class => LeaveEntitlementPolicy::class,
+        LeaveTransaction::class => LeaveTransactionPolicy::class,
         HolidayCalendar::class => HolidayCalendarPolicy::class,
         Holiday::class => HolidayPolicy::class,
         WorkdayPattern::class => WorkdayPatternPolicy::class,
