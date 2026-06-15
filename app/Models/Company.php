@@ -143,6 +143,31 @@ class Company extends Model
         return $this->hasMany(Leave::class);
     }
 
+    public function leaveTypes(): HasMany
+    {
+        return $this->hasMany(LeaveType::class);
+    }
+
+    public function leavePolicies(): HasMany
+    {
+        return $this->hasMany(LeavePolicy::class);
+    }
+
+    public function holidayCalendars(): HasMany
+    {
+        return $this->hasMany(HolidayCalendar::class);
+    }
+
+    public function holidays(): HasMany
+    {
+        return $this->hasMany(Holiday::class);
+    }
+
+    public function workdayPatterns(): HasMany
+    {
+        return $this->hasMany(WorkdayPattern::class);
+    }
+
     public function payrolls(): HasMany
     {
         return $this->hasMany(Payroll::class);

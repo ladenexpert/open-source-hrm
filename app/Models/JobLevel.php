@@ -15,4 +15,9 @@ class JobLevel extends MasterData
     {
         return $this->hasMany(Employee::class);
     }
+
+    public function leavePolicies(): HasMany
+    {
+        return $this->hasMany(LeavePolicy::class);
+    }
 }

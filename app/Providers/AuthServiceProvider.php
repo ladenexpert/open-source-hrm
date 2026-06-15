@@ -21,7 +21,11 @@ use App\Models\Event;
 use App\Models\IdentityType;
 use App\Models\JobGrade;
 use App\Models\JobLevel;
+use App\Models\Holiday;
+use App\Models\HolidayCalendar;
 use App\Models\Leave;
+use App\Models\LeavePolicy as LeavePolicyModel;
+use App\Models\LeaveType;
 use App\Models\MaritalStatus;
 use App\Models\Message;
 use App\Models\Payroll;
@@ -31,6 +35,7 @@ use App\Models\Shift;
 use App\Models\SubscriptionPlan;
 use App\Models\Task;
 use App\Models\Topic;
+use App\Models\WorkdayPattern;
 use App\Models\WorkLocation;
 use App\Models\Bank;
 use App\Models\ContractType;
@@ -47,7 +52,11 @@ use App\Policies\CostCenterPolicy;
 use App\Policies\DepartmentPolicy;
 use App\Policies\EmployeePolicy;
 use App\Policies\EventPolicy;
+use App\Policies\HolidayCalendarPolicy;
+use App\Policies\HolidayPolicy;
 use App\Policies\LeavePolicy;
+use App\Policies\LeavePolicyRecordPolicy;
+use App\Policies\LeaveTypePolicy;
 use App\Policies\MessagePolicy;
 use App\Policies\PayrollPolicy;
 use App\Policies\PositionPolicy;
@@ -56,6 +65,7 @@ use App\Policies\ShiftPolicy;
 use App\Policies\SubscriptionPlanPolicy;
 use App\Policies\TaskPolicy;
 use App\Policies\TopicPolicy;
+use App\Policies\WorkdayPatternPolicy;
 use App\Policies\WorkLocationPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -89,6 +99,11 @@ class AuthServiceProvider extends ServiceProvider
         ApprovalRequest::class => ApprovalRequestPolicy::class,
         ApprovalLog::class => ApprovalLogPolicy::class,
         Leave::class => LeavePolicy::class,
+        LeaveType::class => LeaveTypePolicy::class,
+        LeavePolicyModel::class => LeavePolicyRecordPolicy::class,
+        HolidayCalendar::class => HolidayCalendarPolicy::class,
+        Holiday::class => HolidayPolicy::class,
+        WorkdayPattern::class => WorkdayPatternPolicy::class,
         Payroll::class => PayrollPolicy::class,
         Message::class => MessagePolicy::class,
         Topic::class => TopicPolicy::class,

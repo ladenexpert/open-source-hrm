@@ -100,11 +100,21 @@ Approval logs
 Approval inbox
 Organization authority service
 Future-proof approval architecture
+v1.3.0-leave-foundation
+Sprint 4A leave foundation completed
+Leave type management
+Leave policy management
+Holiday calendar foundation
+Holiday master foundation
+Workday pattern foundation
+Filament leave administration baseline
+Seeder-backed demo leave data
+Basic leave foundation tests
 Repository State
 
 Current stable milestone:
 
-v1.2.2-approval-governance
+v1.3.0-leave-foundation
 
 Repository status expectations:
 
@@ -115,10 +125,54 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.2.2-approval-governance
+v1.3.0-leave-foundation
+
+Sprint 4A Completion
+
+Milestone name:
+v1.3.0-leave-foundation
+
+Tables added:
+leave_types
+leave_policies
+holiday_calendars
+holidays
+workday_patterns
+workday_pattern_days
+
+Models added:
+LeaveType
+LeavePolicy
+HolidayCalendar
+Holiday
+WorkdayPattern
+WorkdayPatternDay
+
+Resources added:
+LeaveTypeResource
+LeavePolicyResource
+HolidayCalendarResource
+HolidayResource
+WorkdayPatternResource
+
+Seeders added:
+LeaveFoundationSeeder
+
+Tests added:
+LeaveFoundationSprint4ATest
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize:clear - passed
+php artisan migrate:fresh --seed - passed
+php artisan test - passed
+
+Next planned sprint:
+Sprint 4B - Leave Balance
 
 Next Sprint
-Sprint 4 – Leave Enterprise
+Sprint 4B - Leave Balance
 
 Sprint 4 prerequisites already completed:
 
