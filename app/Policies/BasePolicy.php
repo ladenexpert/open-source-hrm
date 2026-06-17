@@ -101,7 +101,8 @@ abstract class BasePolicy
         $recordCompanyGroupId = $record->getAttribute('company_group_id');
 
         return filled($recordCompanyGroupId)
-            && $user->canAccessCompanyGroup((int) $recordCompanyGroupId);
+            && filled($user->getEffectiveCompanyGroupId())
+            && (int) $user->getEffectiveCompanyGroupId() === (int) $recordCompanyGroupId;
     }
 
     protected function isOwnEmployeeRecord(Employee $user, ?int $employeeId): bool

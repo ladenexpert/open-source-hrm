@@ -9,7 +9,7 @@ class ApprovalRoleMap
 {
     public static function workflowManagerRoles(): array
     {
-        return ['admin', 'hr', 'hr_admin', 'hr_head'];
+        return ['company_group_admin', 'company_admin', 'admin', 'hr', 'hr_admin', 'hr_head'];
     }
 
     public static function financeRoles(): array
@@ -24,7 +24,7 @@ class ApprovalRoleMap
 
     public static function companyHeadRoles(): array
     {
-        return ['company_head', 'admin', 'super_admin'];
+        return ['company_head', 'company_group_admin', 'super_admin'];
     }
 
     public static function aliasesFor(string $role): array
@@ -32,10 +32,14 @@ class ApprovalRoleMap
         $normalizedRole = static::normalize($role);
 
         return match ($normalizedRole) {
-            'hr', 'hr_admin', 'hr_head' => ['hr_head', 'hr_admin', 'hr', 'admin'],
-            'finance', 'finance_admin', 'finance_head' => ['finance_head', 'finance_admin', 'finance'],
+            'company_group_admin' => ['company_group_admin'],
+            'company_admin', 'admin' => ['company_admin', 'admin'],
+            'hr', 'hr_admin' => ['hr_admin', 'hr'],
+            'hr_head' => ['hr_head'],
+            'finance', 'finance_admin' => ['finance_admin', 'finance'],
+            'finance_head' => ['finance_head'],
             'department_manager', 'department_head', 'leader' => ['department_head', 'department_manager', 'leader'],
-            'company_head' => ['company_head', 'admin', 'super_admin'],
+            'company_head' => ['company_head', 'company_group_admin', 'super_admin'],
             default => [$normalizedRole],
         };
     }

@@ -12,6 +12,7 @@ use App\Models\LeaveRequest;
 use App\Services\ApprovalActionService;
 use App\Services\Leave\LeaveApprovalService;
 use App\Support\ApprovalRoleMap;
+use App\Support\OrganizationScope;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -161,14 +162,13 @@ class ApprovalRequestResource extends Resource
 
             if (ApprovalRoleMap::matches($user, ApprovalRoleMap::workflowManagerRoles())) {
                 $scope->orWhere(function (Builder $managerScope) use ($user): void {
-                    $managerScope->whereIn('company_id', $user->accessibleCompanyIds())
-                        ->orWhere('company_group_id', $user->getEffectiveCompanyGroupId());
+                    OrganizationScope::applyCompanyOrGroupScope($managerScope, $user);
                 });
             }
 
             if (ApprovalRoleMap::matches($user, ApprovalRoleMap::financeRoles())) {
                 $scope->orWhere(function (Builder $financeScope) use ($user): void {
-                    $financeScope->where('company_id', $user->getEffectiveCompanyId())
+                    OrganizationScope::applyCompanyOrGroupScope($financeScope, $user)
                         ->whereIn('module_type', [
                             ApprovalModuleType::PAYROLL->value,
                             ApprovalModuleType::SALARY_CHANGE->value,

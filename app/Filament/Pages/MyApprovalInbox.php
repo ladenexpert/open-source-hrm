@@ -10,6 +10,7 @@ use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Services\ApprovalActionService;
 use App\Services\Leave\LeaveApprovalService;
+use App\Support\OrganizationScope;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -197,23 +198,7 @@ class MyApprovalInbox extends Page implements HasTable
                     return $query;
                 }
 
-                $companyIds = $user->accessibleCompanyIds();
-                $companyGroupId = $user->getEffectiveCompanyGroupId();
-
-                return $query->where(function (Builder $scope) use ($companyIds, $companyGroupId): void {
-                    if ($companyIds !== []) {
-                        $scope->whereIn('company_id', $companyIds);
-                    }
-
-                    if (filled($companyGroupId)) {
-                        $method = $companyIds === [] ? 'where' : 'orWhere';
-                        $scope->{$method}('company_group_id', $companyGroupId);
-                    }
-
-                    if ($companyIds === [] && blank($companyGroupId)) {
-                        $scope->whereRaw('1 = 0');
-                    }
-                });
+                return OrganizationScope::applyCompanyOrGroupScope($query, $user);
             })
             ->latest('id');
     }

@@ -281,7 +281,7 @@ class ApprovalRequestService
         return Employee::query()
             ->where('is_active', true)
             ->where('company_group_id', $companyGroupId)
-            ->whereHas('roles', fn ($query) => $query->whereIn('name', ['admin', 'super_admin']))
+            ->whereHas('roles', fn ($query) => $query->whereIn('name', ['company_head', 'company_group_admin', 'super_admin']))
             ->get();
     }
 

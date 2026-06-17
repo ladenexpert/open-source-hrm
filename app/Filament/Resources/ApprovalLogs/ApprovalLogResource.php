@@ -6,6 +6,7 @@ use App\Filament\Resources\ApprovalLogs\Pages\ListApprovalLogs;
 use App\Models\ApprovalLog;
 use App\Models\Employee;
 use App\Support\ApprovalRoleMap;
+use App\Support\OrganizationScope;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -79,8 +80,7 @@ class ApprovalLogResource extends Resource
 
             if (ApprovalRoleMap::matches($user, ApprovalRoleMap::workflowManagerRoles())) {
                 $requestQuery->orWhere(function (Builder $scope) use ($user): void {
-                    $scope->whereIn('company_id', $user->accessibleCompanyIds())
-                        ->orWhere('company_group_id', $user->getEffectiveCompanyGroupId());
+                    OrganizationScope::applyCompanyOrGroupScope($scope, $user);
                 });
             }
         });

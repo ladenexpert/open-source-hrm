@@ -12,6 +12,7 @@ use App\Models\Company;
 use App\Models\CompanyGroup;
 use App\Models\Employee;
 use App\Models\JobLevel;
+use App\Support\OrganizationScope;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
@@ -200,10 +201,7 @@ class ApprovalWorkflowResource extends Resource
             return $query;
         }
 
-        return $query->where(function (Builder $scope) use ($user): void {
-            $scope->whereIn('company_id', $user->accessibleCompanyIds())
-                ->orWhere('company_group_id', $user->getEffectiveCompanyGroupId());
-        });
+        return OrganizationScope::applyCompanyOrGroupScope($query, $user);
     }
 
     public static function canAccess(): bool

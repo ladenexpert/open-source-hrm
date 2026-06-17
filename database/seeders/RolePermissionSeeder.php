@@ -14,6 +14,8 @@ class RolePermissionSeeder extends Seeder
     {
         foreach ([
             'super_admin',
+            'company_group_admin',
+            'company_admin',
             'admin',
             'hr',
             'hr_admin',

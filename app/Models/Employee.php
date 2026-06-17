@@ -153,6 +153,8 @@ class Employee extends Authenticatable implements FilamentUser
     {
         return $this->hasAnyNormalizedRole([
             'super_admin',
+            'company_group_admin',
+            'company_admin',
             'admin',
             'hr',
             'hr_admin',
@@ -171,6 +173,8 @@ class Employee extends Authenticatable implements FilamentUser
     {
         return $this->hasAnyNormalizedRole([
             'super_admin',
+            'company_group_admin',
+            'company_admin',
             'admin',
             'hr',
             'hr_admin',
@@ -191,6 +195,19 @@ class Employee extends Authenticatable implements FilamentUser
     public function isSuperAdmin(): bool
     {
         return $this->hasNormalizedRole('super_admin');
+    }
+
+    public function isCompanyGroupAdmin(): bool
+    {
+        return $this->hasNormalizedRole('company_group_admin');
+    }
+
+    public function isCompanyAdmin(): bool
+    {
+        return $this->hasAnyNormalizedRole([
+            'company_admin',
+            'admin',
+        ]);
     }
 
     public function isDepartmentManager(): bool
@@ -224,10 +241,12 @@ class Employee extends Authenticatable implements FilamentUser
             return Company::query();
         }
 
-        $companyGroupId = $this->getEffectiveCompanyGroupId();
+        if ($this->hasCompanyGroupWideScope()) {
+            $companyGroupId = $this->getEffectiveCompanyGroupId();
 
-        if (filled($companyGroupId)) {
-            return Company::query()->where('company_group_id', $companyGroupId);
+            if (filled($companyGroupId)) {
+                return Company::query()->where('company_group_id', $companyGroupId);
+            }
         }
 
         return Company::query()->whereKey($this->getEffectiveCompanyId());
@@ -255,6 +274,10 @@ class Employee extends Authenticatable implements FilamentUser
             return true;
         }
 
+        if (! $this->hasCompanyGroupWideScope()) {
+            return false;
+        }
+
         $companyGroupId = $this->getEffectiveCompanyGroupId();
 
         if (blank($companyGroupId)) {
@@ -274,7 +297,10 @@ class Employee extends Authenticatable implements FilamentUser
         }
 
         return $this->isSuperAdmin()
-            || (int) $this->getEffectiveCompanyGroupId() === (int) $companyGroupId;
+            || (
+                $this->hasCompanyGroupWideScope()
+                && (int) $this->getEffectiveCompanyGroupId() === (int) $companyGroupId
+            );
     }
 
     public function hasNormalizedRole(string $role): bool
@@ -488,6 +514,16 @@ class Employee extends Authenticatable implements FilamentUser
             ->lower()
             ->replace(['-', ' '], '_')
             ->value();
+    }
+
+    public function hasCompanyGroupWideScope(): bool
+    {
+        return $this->isCompanyGroupAdmin()
+            || $this->hasAnyNormalizedRole([
+                'hr_head',
+                'finance_head',
+                'company_head',
+            ]);
     }
 
     private function syncDerivedProfileFields(): void

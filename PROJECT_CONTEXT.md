@@ -136,11 +136,20 @@ Approval inbox integration for leave requests
 Employee portal approval status and history display
 Leave approval notification events
 Leave approval validation tests
+v1.3.4-access-scope-hardening
+Sprint 4D hardening completed
+Global access hierarchy hardened
+Employee-based authorization confirmed
+Super Admin bypass preserved
+Approval governance scope filters centralized
+Company Admin vs Company Group Admin baseline introduced
+Portal self-scope preserved
+Approval inbox scope regression coverage added
 Repository State
 
 Current stable milestone:
 
-v1.3.3-leave-approval-stable
+v1.3.4-access-scope-hardening
 
 Repository status expectations:
 
@@ -151,7 +160,7 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.3.3-leave-approval-stable
+v1.3.4-access-scope-hardening
 
 Sprint 4A Completion
 
@@ -311,6 +320,84 @@ php artisan test - passed
 
 Next planned sprint:
 v1.4.x Attendance
+
+Sprint 4D-Hardening Completion
+
+Milestone candidate:
+v1.3.4-access-scope-hardening
+
+Global access hierarchy:
+Super Admin / Platform Owner:
+Can access all tenants, company groups, companies, and module data without company_id or company_group_id restrictions.
+Company Group Admin:
+Can access and maintain records within the assigned company group and its companies.
+Company Admin:
+Can access and maintain records within the assigned company only unless a workflow or role explicitly grants broader approval responsibility.
+Employee / Portal User:
+Can access only self-service and self-owned records.
+
+Discovery findings summary:
+Employee is the authenticated actor across admin and portal panels; no User-based authorization architecture is used.
+Super Admin bypass is implemented through Employee::isSuperAdmin() and BasePolicy::before().
+Company group wide access was not previously explicit in Employee helpers; several approval queries inferred broader scope directly from company_group_id.
+Company Admin and Company Group Admin were not explicitly separated in seeded roles or reusable access helpers.
+Portal leave queries were already correctly self-scoped through LeaveRequest::scopeForEmployee().
+Approval inbox, approval request resource, approval log resource, and approval workflow resource contained duplicated inline company/group scope logic.
+No custom app/Http/Middleware scoping layer currently participates in this hierarchy; scope enforcement lives in Employee helpers, policies, Filament resources, and approval services.
+Shared scoped master data remains intentionally manageable by HR master-data actors within the same company group.
+
+Files reviewed:
+app/Policies/BasePolicy.php
+app/Models/Employee.php
+app/Providers/Filament/AdminPanelProvider.php
+app/Providers/Filament/EmployeePanelProvider.php
+app/Policies/
+app/Filament/Resources/
+app/Filament/Employee/Resources/LeaveRequests/LeaveRequestResource.php
+app/Filament/Pages/MyApprovalInbox.php
+app/Services/ApprovalActionService.php
+app/Services/ApprovalRequestService.php
+app/Services/OrganizationAuthorityService.php
+app/Support/ApprovalRoleMap.php
+app/Support/OrganizationScope.php
+database/seeders/RolePermissionSeeder.php
+tests/Feature/
+
+Files modified:
+app/Policies/BasePolicy.php
+app/Models/Employee.php
+app/Filament/Pages/MyApprovalInbox.php
+app/Filament/Resources/ApprovalLogs/ApprovalLogResource.php
+app/Filament/Resources/ApprovalRequests/ApprovalRequestResource.php
+app/Filament/Resources/ApprovalWorkflows/ApprovalWorkflowResource.php
+app/Services/ApprovalRequestService.php
+app/Support/ApprovalRoleMap.php
+app/Support/OrganizationScope.php
+database/seeders/RolePermissionSeeder.php
+PROJECT_CONTEXT.md
+
+Files created:
+tests/Feature/AccessScopeHardeningTest.php
+
+Tests added or updated:
+AccessScopeHardeningTest added
+LeaveApprovalSprint4DTest regression scenarios revalidated for approval actions and inbox scope
+SprintThreeFoundationTest revalidated for shared master-data scope
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize - passed
+php artisan migrate --seed - passed
+php artisan test - passed (151 tests, 338 assertions)
+
+Known issues or intentional deferrals:
+No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
+Shared group-scoped HR master data remains intentionally available to same-group HR master-data managers.
+Approval workflow business rules were not rewritten; this sprint only hardened reusable access-scope boundaries and role detection.
+
+Next planned phase:
+Phase 3 - Attendance Enterprise
 
 Next Sprint
 v1.4.x Attendance
