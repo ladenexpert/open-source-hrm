@@ -8,7 +8,9 @@ use App\Filament\Resources\ApprovalRequests\Pages\ListApprovalRequests;
 use App\Filament\Resources\ApprovalRequests\Pages\ViewApprovalRequest;
 use App\Models\ApprovalRequest;
 use App\Models\Employee;
+use App\Models\LeaveRequest;
 use App\Services\ApprovalActionService;
+use App\Services\Leave\LeaveApprovalService;
 use App\Support\ApprovalRoleMap;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -20,7 +22,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 
 class ApprovalRequestResource extends Resource
 {
@@ -85,9 +86,15 @@ class ApprovalRequestResource extends Resource
                             ->label('Comments')
                             ->rows(4),
                     ])
-                    ->visible(fn (ApprovalRequest $record): bool => Auth::user() instanceof Employee && Gate::forUser(Auth::user())->allows('approve', $record))
+                    ->visible(fn (ApprovalRequest $record): bool => Auth::user() instanceof Employee && app(ApprovalActionService::class)->canApprove($record, Auth::user()))
                     ->action(function (ApprovalRequest $record, array $data): void {
-                        app(ApprovalActionService::class)->approveCurrentStep($record, Auth::user(), $data['comments'] ?? null);
+                        $record->loadMissing('approvable');
+
+                        if ($record->approvable instanceof LeaveRequest) {
+                            app(LeaveApprovalService::class)->processApproval($record, Auth::user(), 'approved', $data['comments'] ?? null);
+                        } else {
+                            app(ApprovalActionService::class)->approveCurrentStep($record, Auth::user(), $data['comments'] ?? null);
+                        }
 
                         Notification::make()
                             ->title('Approval step completed.')
@@ -103,9 +110,15 @@ class ApprovalRequestResource extends Resource
                             ->required()
                             ->rows(4),
                     ])
-                    ->visible(fn (ApprovalRequest $record): bool => Auth::user() instanceof Employee && Gate::forUser(Auth::user())->allows('reject', $record))
+                    ->visible(fn (ApprovalRequest $record): bool => Auth::user() instanceof Employee && app(ApprovalActionService::class)->canReject($record, Auth::user()))
                     ->action(function (ApprovalRequest $record, array $data): void {
-                        app(ApprovalActionService::class)->rejectCurrentStep($record, Auth::user(), $data['comments'] ?? null);
+                        $record->loadMissing('approvable');
+
+                        if ($record->approvable instanceof LeaveRequest) {
+                            app(LeaveApprovalService::class)->processApproval($record, Auth::user(), 'rejected', $data['comments'] ?? null);
+                        } else {
+                            app(ApprovalActionService::class)->rejectCurrentStep($record, Auth::user(), $data['comments'] ?? null);
+                        }
 
                         Notification::make()
                             ->title('Approval request rejected.')
@@ -168,6 +181,6 @@ class ApprovalRequestResource extends Resource
     public static function canAccess(): bool
     {
         return Auth::user() instanceof Employee
-            && Gate::forUser(Auth::user())->allows('viewAny', ApprovalRequest::class);
+            && Auth::user()->can('viewAny', ApprovalRequest::class);
     }
 }

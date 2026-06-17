@@ -537,7 +537,7 @@ class LeaveRequestSprint4CTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_resource_does_not_expose_approve_action(): void
+    public function test_admin_resource_hides_approve_actions_for_non_approver(): void
     {
         Filament::setCurrentPanel('admin');
 
@@ -545,8 +545,8 @@ class LeaveRequestSprint4CTest extends TestCase
 
         Livewire::actingAs($this->employee('admin@hrms.local'))
             ->test(AdminViewLeaveRequest::class, ['record' => $leaveRequest->id])
-            ->assertActionDoesNotExist('approve')
-            ->assertActionDoesNotExist('reject');
+            ->assertActionHidden('approve')
+            ->assertActionHidden('reject');
     }
 
     public function test_employee_can_view_own_leave_request_list(): void

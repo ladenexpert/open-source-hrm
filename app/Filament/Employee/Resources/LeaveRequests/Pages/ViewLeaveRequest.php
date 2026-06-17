@@ -31,6 +31,10 @@ class ViewLeaveRequest extends ViewRecord
             'leaveEntitlement',
             'attachment',
             'cancelledBy',
+            'approvalRequest.workflow.steps',
+            'approvalRequest.steps.approver',
+            'approvalRequest.steps.workflowStep',
+            'approvalRequest.logs.actor',
         ]);
     }
 }

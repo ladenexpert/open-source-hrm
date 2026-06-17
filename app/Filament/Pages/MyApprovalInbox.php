@@ -2,10 +2,14 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\LeaveRequests\LeaveRequestResource;
 use App\Filament\Resources\ApprovalRequests\ApprovalRequestResource;
+use App\Models\ApprovalRequest;
 use App\Models\ApprovalRequestStep;
 use App\Models\Employee;
+use App\Models\LeaveRequest;
 use App\Services\ApprovalActionService;
+use App\Services\Leave\LeaveApprovalService;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -45,25 +49,21 @@ class MyApprovalInbox extends Page implements HasTable
             return null;
         }
 
-        $count = ApprovalRequestStep::query()
-            ->where('approver_id', $user->getKey())
-            ->where('status', 'pending')
-            ->whereHas('request', fn (Builder $query): Builder => $query->where('status', 'pending'))
-            ->count();
+        $count = static::pendingStepsQueryFor($user)->count();
 
         return $count > 0 ? (string) $count : null;
     }
 
     public function table(Table $table): Table
     {
+        /** @var Employee|null $user */
+        $user = auth()->user();
+
         return $table
             ->query(
-                ApprovalRequestStep::query()
-                    ->with(['request.company', 'request.requester', 'request.employeeSubject', 'workflowStep'])
-                    ->where('approver_id', auth()->id())
-                    ->where('status', 'pending')
-                    ->whereHas('request', fn (Builder $query): Builder => $query->where('status', 'pending'))
-                    ->latest('id')
+                $user instanceof Employee
+                    ? static::pendingStepsQueryFor($user)
+                    : ApprovalRequestStep::query()->whereRaw('1 = 0')
             )
             ->columns([
                 TextColumn::make('request.module_type')
@@ -75,6 +75,31 @@ class MyApprovalInbox extends Page implements HasTable
                 TextColumn::make('request.requester.full_name')
                     ->label('Requester')
                     ->searchable(),
+                TextColumn::make('leave_request.employee')
+                    ->label('Employee')
+                    ->state(fn (ApprovalRequestStep $record): string => $this->resolveLeaveRequest($record->request)?->employee?->full_name ?? '-')
+                    ->toggleable(),
+                TextColumn::make('leave_request.leave_type')
+                    ->label('Leave Type')
+                    ->state(fn (ApprovalRequestStep $record): string => $this->resolveLeaveRequest($record->request)?->leaveType?->name ?? '-')
+                    ->toggleable(),
+                TextColumn::make('leave_request.period')
+                    ->label('Period')
+                    ->state(function (ApprovalRequestStep $record): string {
+                        $leaveRequest = $this->resolveLeaveRequest($record->request);
+
+                        if (! $leaveRequest instanceof LeaveRequest) {
+                            return '-';
+                        }
+
+                        return $leaveRequest->start_date->toDateString().' - '.$leaveRequest->end_date->toDateString();
+                    })
+                    ->toggleable(),
+                TextColumn::make('leave_request.requested_days')
+                    ->label('Requested Days')
+                    ->state(fn (ApprovalRequestStep $record): ?float => $this->resolveLeaveRequest($record->request)?->requested_days)
+                    ->numeric(decimalPlaces: 2)
+                    ->toggleable(),
                 TextColumn::make('request.employeeSubject.full_name')
                     ->label('Subject')
                     ->toggleable(),
@@ -99,7 +124,11 @@ class MyApprovalInbox extends Page implements HasTable
                             ->rows(4),
                     ])
                     ->action(function (ApprovalRequestStep $record, array $data): void {
-                        app(ApprovalActionService::class)->approveCurrentStep($record->request, auth()->user(), $data['comments'] ?? null);
+                        if ($this->resolveLeaveRequest($record->request) instanceof LeaveRequest) {
+                            app(LeaveApprovalService::class)->processApproval($record->request, auth()->user(), 'approved', $data['comments'] ?? null);
+                        } else {
+                            app(ApprovalActionService::class)->approveCurrentStep($record->request, auth()->user(), $data['comments'] ?? null);
+                        }
 
                         Notification::make()->title('Approval step completed.')->success()->send();
                     }),
@@ -112,13 +141,80 @@ class MyApprovalInbox extends Page implements HasTable
                             ->rows(4),
                     ])
                     ->action(function (ApprovalRequestStep $record, array $data): void {
-                        app(ApprovalActionService::class)->rejectCurrentStep($record->request, auth()->user(), $data['comments'] ?? null);
+                        if ($this->resolveLeaveRequest($record->request) instanceof LeaveRequest) {
+                            app(LeaveApprovalService::class)->processApproval($record->request, auth()->user(), 'rejected', $data['comments'] ?? null);
+                        } else {
+                            app(ApprovalActionService::class)->rejectCurrentStep($record->request, auth()->user(), $data['comments'] ?? null);
+                        }
 
                         Notification::make()->title('Approval request rejected.')->success()->send();
                     }),
                 Action::make('open')
                     ->label('Open Request')
-                    ->url(fn (ApprovalRequestStep $record): string => ApprovalRequestResource::getUrl('view', ['record' => $record->request])),
+                    ->url(fn (ApprovalRequestStep $record): string => $this->resolveOpenUrl($record->request)),
             ]);
+    }
+
+    private function resolveLeaveRequest(?ApprovalRequest $approvalRequest): ?LeaveRequest
+    {
+        if (! $approvalRequest instanceof ApprovalRequest) {
+            return null;
+        }
+
+        $approvalRequest->loadMissing('approvable');
+        $approvable = $approvalRequest->approvable;
+
+        if (! $approvable instanceof LeaveRequest) {
+            return null;
+        }
+
+        $approvable->loadMissing(['employee', 'leaveType']);
+
+        return $approvable;
+    }
+
+    private function resolveOpenUrl(ApprovalRequest $approvalRequest): string
+    {
+        $leaveRequest = $this->resolveLeaveRequest($approvalRequest);
+
+        if ($leaveRequest instanceof LeaveRequest) {
+            return LeaveRequestResource::getUrl('view', ['record' => $leaveRequest]);
+        }
+
+        return ApprovalRequestResource::getUrl('view', ['record' => $approvalRequest]);
+    }
+
+    private static function pendingStepsQueryFor(Employee $user): Builder
+    {
+        return ApprovalRequestStep::query()
+            ->with(['request.company', 'request.requester', 'request.employeeSubject', 'request.approvable', 'workflowStep'])
+            ->where('approver_id', $user->getKey())
+            ->where('status', 'pending')
+            ->whereHas('request', function (Builder $query) use ($user): Builder {
+                $query->where('status', 'pending');
+
+                if ($user->isSuperAdmin()) {
+                    return $query;
+                }
+
+                $companyIds = $user->accessibleCompanyIds();
+                $companyGroupId = $user->getEffectiveCompanyGroupId();
+
+                return $query->where(function (Builder $scope) use ($companyIds, $companyGroupId): void {
+                    if ($companyIds !== []) {
+                        $scope->whereIn('company_id', $companyIds);
+                    }
+
+                    if (filled($companyGroupId)) {
+                        $method = $companyIds === [] ? 'where' : 'orWhere';
+                        $scope->{$method}('company_group_id', $companyGroupId);
+                    }
+
+                    if ($companyIds === [] && blank($companyGroupId)) {
+                        $scope->whereRaw('1 = 0');
+                    }
+                });
+            })
+            ->latest('id');
     }
 }

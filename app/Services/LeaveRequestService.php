@@ -2,20 +2,28 @@
 
 namespace App\Services;
 
+use App\Events\Leave\LeaveRequestApproved;
+use App\Events\Leave\LeaveRequestCancelled;
+use App\Events\Leave\LeaveRequestRejected;
+use App\Events\Leave\LeaveRequestSubmitted;
 use App\Models\Employee;
 use App\Models\Holiday;
 use App\Models\LeaveRequest;
 use App\Models\LeaveRequestAttachment;
+use App\Models\LeaveTransaction;
 use App\Models\LeaveType;
+use App\Services\Leave\LeaveApprovalService;
 use App\Models\WorkdayPattern;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class LeaveRequestService
 {
@@ -34,6 +42,7 @@ class LeaveRequestService
         private readonly LeaveCalculationService $leaveCalculationService,
         private readonly LeaveBalanceService $leaveBalanceService,
         private readonly LeaveEntitlementService $leaveEntitlementService,
+        private readonly LeaveApprovalService $leaveApprovalService,
     ) {
     }
 
@@ -116,17 +125,111 @@ class LeaveRequestService
                 'submitted_at' => now(),
             ])->save();
 
+            $this->leaveApprovalService->initiateApproval($leaveRequest);
+
             if ($attachment instanceof UploadedFile) {
                 $this->storeAttachment($leaveRequest, $attachment, $employee);
             }
 
-            return $leaveRequest->fresh([
+            $leaveRequest = $leaveRequest->fresh([
                 'company',
                 'employee',
                 'leaveType',
                 'leaveEntitlement',
                 'attachment',
             ]);
+
+            event(new LeaveRequestSubmitted($leaveRequest, $employee));
+
+            return $leaveRequest;
+        });
+    }
+
+    public function approve(LeaveRequest $leaveRequest, Employee $approver): LeaveRequest
+    {
+        return DB::transaction(function () use ($leaveRequest, $approver): LeaveRequest {
+            $leaveRequest = $this->lockLeaveRequest($leaveRequest);
+
+            if (! $leaveRequest->isPending()) {
+                throw ValidationException::withMessages([
+                    'status' => 'Only pending leave requests can be approved.',
+                ]);
+            }
+
+            if ($this->hasLeaveTakenTransaction($leaveRequest)) {
+                throw ValidationException::withMessages([
+                    'leave_request' => 'A leave deduction has already been recorded for this request.',
+                ]);
+            }
+
+            $leaveRequest->forceFill([
+                'status' => LeaveRequest::STATUS_APPROVED,
+                'rejection_reason' => null,
+            ])->save();
+
+            $entitlement = $leaveRequest->leaveEntitlement;
+
+            if ($entitlement && (float) $leaveRequest->requested_days > 0) {
+                $this->leaveBalanceService->deductBalance(
+                    $entitlement,
+                    (float) $leaveRequest->requested_days,
+                    LeaveRequest::class,
+                    (int) $leaveRequest->getKey(),
+                    sprintf('Approved leave request #%d.', $leaveRequest->getKey()),
+                );
+            }
+
+            $leaveRequest = $leaveRequest->fresh([
+                'company',
+                'employee',
+                'leaveType',
+                'leaveEntitlement',
+                'attachment',
+                'cancelledBy',
+                'approvalRequest.logs.actor',
+                'approvalRequest.steps.approver',
+                'approvalRequest.steps.workflowStep',
+                'approvalRequest.workflow.steps',
+            ]);
+
+            event(new LeaveRequestApproved($leaveRequest, $approver));
+
+            return $leaveRequest;
+        });
+    }
+
+    public function reject(LeaveRequest $leaveRequest, Employee $approver, ?string $reason = null): LeaveRequest
+    {
+        return DB::transaction(function () use ($leaveRequest, $approver, $reason): LeaveRequest {
+            $leaveRequest = $this->lockLeaveRequest($leaveRequest);
+
+            if (! $leaveRequest->isPending()) {
+                throw ValidationException::withMessages([
+                    'status' => 'Only pending leave requests can be rejected.',
+                ]);
+            }
+
+            $leaveRequest->forceFill([
+                'status' => LeaveRequest::STATUS_REJECTED,
+                'rejection_reason' => $reason,
+            ])->save();
+
+            $leaveRequest = $leaveRequest->fresh([
+                'company',
+                'employee',
+                'leaveType',
+                'leaveEntitlement',
+                'attachment',
+                'cancelledBy',
+                'approvalRequest.logs.actor',
+                'approvalRequest.steps.approver',
+                'approvalRequest.steps.workflowStep',
+                'approvalRequest.workflow.steps',
+            ]);
+
+            event(new LeaveRequestRejected($leaveRequest, $approver));
+
+            return $leaveRequest;
         });
     }
 
@@ -160,14 +263,99 @@ class LeaveRequestService
                 'cancellation_reason' => $reason,
             ])->save();
 
-            return $leaveRequest->fresh([
+            $this->leaveApprovalService->cancelPendingApproval($leaveRequest, $actor, $reason);
+
+            $leaveRequest = $leaveRequest->fresh([
                 'company',
                 'employee',
                 'leaveType',
                 'leaveEntitlement',
                 'attachment',
                 'cancelledBy',
+                'approvalRequest.logs.actor',
+                'approvalRequest.steps.approver',
+                'approvalRequest.steps.workflowStep',
+                'approvalRequest.workflow.steps',
             ]);
+
+            event(new LeaveRequestCancelled($leaveRequest, $actor));
+
+            return $leaveRequest;
+        });
+    }
+
+    public function cancelApproved(LeaveRequest $leaveRequest, Employee $adminActor, ?string $reason = null): LeaveRequest
+    {
+        return DB::transaction(function () use ($leaveRequest, $adminActor, $reason): LeaveRequest {
+            $leaveRequest = $this->lockLeaveRequest($leaveRequest);
+
+            if (! $leaveRequest->isApproved()) {
+                throw ValidationException::withMessages([
+                    'status' => 'Only approved leave requests can be cancelled through this action.',
+                ]);
+            }
+
+            if (! Gate::forUser($adminActor)->allows('cancelApproved', $leaveRequest)) {
+                throw ValidationException::withMessages([
+                    'employee_id' => 'You are not allowed to cancel this approved leave request.',
+                ]);
+            }
+
+            $leaveRequest->forceFill([
+                'status' => LeaveRequest::STATUS_CANCELLED,
+                'cancelled_at' => now(),
+                'cancelled_by' => $adminActor->getKey(),
+                'cancellation_reason' => $reason,
+            ])->save();
+
+            $entitlement = $leaveRequest->leaveEntitlement;
+
+            if ($entitlement && (float) $leaveRequest->requested_days > 0) {
+                if ($this->hasRestoreTransaction($leaveRequest)) {
+                    throw ValidationException::withMessages([
+                        'leave_request' => 'The approved leave request has already been restored.',
+                    ]);
+                }
+
+                if (! $this->hasLeaveTakenTransaction($leaveRequest)) {
+                    Log::warning('Skipping leave balance restore because no prior leave deduction exists.', [
+                        'leave_request_id' => $leaveRequest->getKey(),
+                        'employee_id' => $leaveRequest->employee_id,
+                        'leave_entitlement_id' => $leaveRequest->leave_entitlement_id,
+                    ]);
+                } else {
+                    $this->leaveBalanceService->restoreBalance(
+                        $entitlement,
+                        (float) $leaveRequest->requested_days,
+                        LeaveRequest::class,
+                        (int) $leaveRequest->getKey(),
+                        sprintf('Cancelled approved leave request #%d.', $leaveRequest->getKey()),
+                    );
+                }
+            } elseif ((float) $leaveRequest->requested_days > 0) {
+                Log::warning('Skipping leave balance restore because the approved leave request has no linked entitlement.', [
+                    'leave_request_id' => $leaveRequest->getKey(),
+                    'employee_id' => $leaveRequest->employee_id,
+                    'company_id' => $leaveRequest->company_id,
+                ]);
+            }
+
+            $leaveRequest = $leaveRequest->fresh([
+                'company',
+                'employee',
+                'leaveType',
+                'leaveEntitlement',
+                'attachment',
+                'cancelledBy',
+                'approvalRequest.logs.actor',
+                'approvalRequest.steps.approver',
+                'approvalRequest.steps.workflowStep',
+                'approvalRequest.workflow.steps',
+            ]);
+
+            event(new LeaveRequestCancelled($leaveRequest, $adminActor));
+
+            return $leaveRequest;
         });
     }
 
@@ -404,9 +592,38 @@ class LeaveRequestService
     private function lockLeaveRequest(LeaveRequest $leaveRequest): LeaveRequest
     {
         return LeaveRequest::query()
-            ->with(['company', 'employee', 'leaveType', 'leaveEntitlement', 'attachment', 'cancelledBy'])
+            ->with([
+                'company',
+                'employee',
+                'leaveType',
+                'leaveEntitlement',
+                'attachment',
+                'cancelledBy',
+                'approvalRequest.logs.actor',
+                'approvalRequest.steps.approver',
+                'approvalRequest.steps.workflowStep',
+                'approvalRequest.workflow.steps',
+            ])
             ->whereKey($leaveRequest->getKey())
             ->lockForUpdate()
             ->firstOrFail();
+    }
+
+    private function hasLeaveTakenTransaction(LeaveRequest $leaveRequest): bool
+    {
+        return LeaveTransaction::query()
+            ->where('reference_type', LeaveRequest::class)
+            ->where('reference_id', $leaveRequest->getKey())
+            ->where('transaction_type', LeaveTransaction::TYPE_LEAVE_TAKEN)
+            ->exists();
+    }
+
+    private function hasRestoreTransaction(LeaveRequest $leaveRequest): bool
+    {
+        return LeaveTransaction::query()
+            ->where('reference_type', LeaveRequest::class)
+            ->where('reference_id', $leaveRequest->getKey())
+            ->where('transaction_type', LeaveTransaction::TYPE_RESTORE)
+            ->exists();
     }
 }

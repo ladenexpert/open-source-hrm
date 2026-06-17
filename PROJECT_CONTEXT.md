@@ -125,11 +125,22 @@ Employee portal leave request feature
 Admin leave request monitoring resource
 Seeder-backed leave request demo data
 Leave request validation tests
+v1.3.3-leave-approval-stable
+Sprint 4D leave approval completed
+Leave approval workflow integration
+LeaveApprovalService adapter
+Approval-driven approve/reject lifecycle
+Balance deduction on final approval
+Balance restore on admin cancellation of approved leave
+Approval inbox integration for leave requests
+Employee portal approval status and history display
+Leave approval notification events
+Leave approval validation tests
 Repository State
 
 Current stable milestone:
 
-v1.3.2-leave-request
+v1.3.3-leave-approval-stable
 
 Repository status expectations:
 
@@ -140,7 +151,7 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.3.2-leave-request
+v1.3.3-leave-approval-stable
 
 Sprint 4A Completion
 
@@ -260,8 +271,49 @@ php artisan test - passed
 Next planned sprint:
 Sprint 4D - Leave Approval Stable
 
+Sprint 4D Completion
+
+Milestone candidate:
+v1.3.3-leave-approval-stable
+
+Services added:
+LeaveApprovalService
+
+Workflow updates:
+LeaveRequestService submit approval initiation
+LeaveRequestService approve reject and cancelApproved flows
+Approval inbox leave integration
+Employee portal approval history display
+
+Balance updates:
+Final approval triggers LEAVE_TAKEN transaction
+Admin cancellation of approved leave triggers RESTORE transaction
+Leave balance mutations remain centralized in LeaveBalanceService
+
+Events added:
+LeaveRequestSubmitted
+LeaveRequestApproved
+LeaveRequestRejected
+LeaveRequestCancelled
+
+Architecture notes:
+LeaveApprovalService is a thin adapter over the approval governance engine
+Leave requests link to approval requests through the existing polymorphic approvable relation
+Approval engine supports multi-step sequential approval
+Leave transaction types include LEAVE_TAKEN and RESTORE as string-backed values
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize - passed
+php artisan migrate --seed - passed
+php artisan test - passed
+
+Next planned sprint:
+v1.4.x Attendance
+
 Next Sprint
-Sprint 4D - Leave Approval Stable
+v1.4.x Attendance
 
 Sprint 4 prerequisites already completed:
 
@@ -274,6 +326,7 @@ Approval Governance Foundation
 Important principle:
 
 Leave Enterprise MUST consume the existing Approval Governance Foundation and MUST NOT implement separate hardcoded approval logic.
+Leave approval orchestration now flows through LeaveApprovalService as the adapter between leave and the approval engine.
 
 Local Demo Credentials
 

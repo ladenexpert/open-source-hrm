@@ -206,7 +206,7 @@ class ApprovalRequestService
 
     private function resolveCompanyGroupId(Model $approvable, ?Employee $subject, int $companyId, Employee $requester): ?int
     {
-        $companyGroupId = $approvable->getAttribute('company_group_id')
+        $companyGroupId = $approvable->getAttributes()['company_group_id'] ?? null
             ?: $subject?->getEffectiveCompanyGroupId()
             ?: $requester->getEffectiveCompanyGroupId()
             ?: Company::query()->whereKey($companyId)->value('company_group_id');

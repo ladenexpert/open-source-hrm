@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Employee;
 use App\Models\LeaveRequest;
+use App\Services\ApprovalActionService;
 
 class LeaveRequestPolicy extends BasePolicy
 {
@@ -47,5 +48,30 @@ class LeaveRequestPolicy extends BasePolicy
             && $leaveRequest->isCancellable()
             && $this->isOwnEmployeeRecord($user, $leaveRequest->employee_id)
             && $this->sharesCompany($user, $leaveRequest);
+    }
+
+    public function approve(Employee $user, LeaveRequest $leaveRequest): bool
+    {
+        $approvalRequest = $leaveRequest->approvalRequest()->first();
+
+        return $this->isActiveUser($user)
+            && $approvalRequest !== null
+            && app(ApprovalActionService::class)->canApprove($approvalRequest, $user);
+    }
+
+    public function reject(Employee $user, LeaveRequest $leaveRequest): bool
+    {
+        $approvalRequest = $leaveRequest->approvalRequest()->first();
+
+        return $this->isActiveUser($user)
+            && $approvalRequest !== null
+            && app(ApprovalActionService::class)->canReject($approvalRequest, $user);
+    }
+
+    public function cancelApproved(Employee $user, LeaveRequest $leaveRequest): bool
+    {
+        return $this->isActiveUser($user)
+            && $leaveRequest->isApproved()
+            && $this->canManageCompanyHrRecord($user, $leaveRequest);
     }
 }

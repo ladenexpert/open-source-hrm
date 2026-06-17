@@ -250,7 +250,7 @@ class ApprovalGovernanceFoundationTest extends TestCase
 
         app(ApprovalActionService::class)->approveCurrentStep($request, $supervisor, 'Approved.');
 
-        $this->assertDatabaseCount('approval_logs', 2);
+        $this->assertSame(2, $request->fresh()->logs()->count());
         $this->assertDatabaseHas('approval_logs', [
             'approval_request_id' => $request->id,
             'action' => 'submitted',

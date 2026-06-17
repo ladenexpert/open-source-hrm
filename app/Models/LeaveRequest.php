@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class LeaveRequest extends Model
 {
@@ -47,6 +48,7 @@ class LeaveRequest extends Model
         'cancelled_at',
         'cancelled_by',
         'cancellation_reason',
+        'rejection_reason',
         'notes',
     ];
 
@@ -111,6 +113,11 @@ class LeaveRequest extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(LeaveRequestAttachment::class)->latest('id');
+    }
+
+    public function approvalRequest(): MorphOne
+    {
+        return $this->morphOne(ApprovalRequest::class, 'approvable');
     }
 
     public function scopeForEmployee(Builder $query, Employee $employee): Builder
