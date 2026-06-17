@@ -49,6 +49,11 @@ class LeaveType extends Model
         return $this->hasMany(LeaveTransaction::class);
     }
 
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

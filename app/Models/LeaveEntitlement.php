@@ -67,6 +67,11 @@ class LeaveEntitlement extends Model
         return $this->hasMany(LeaveTransaction::class)->latest('id');
     }
 
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class)->latest('id');
+    }
+
     public function scopeForYear(Builder $query, int $year): Builder
     {
         return $query->where('year', $year);

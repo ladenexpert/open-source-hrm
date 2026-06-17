@@ -418,6 +418,21 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->hasMany(LeaveTransaction::class);
     }
 
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    public function cancelledLeaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class, 'cancelled_by');
+    }
+
+    public function leaveRequestAttachments(): HasMany
+    {
+        return $this->hasMany(LeaveRequestAttachment::class, 'uploaded_by');
+    }
+
     /**
      * Get the attributes that should be cast.
      *

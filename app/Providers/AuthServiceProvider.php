@@ -25,6 +25,8 @@ use App\Models\Holiday;
 use App\Models\HolidayCalendar;
 use App\Models\Leave;
 use App\Models\LeaveEntitlement;
+use App\Models\LeaveRequest;
+use App\Models\LeaveRequestAttachment;
 use App\Models\LeavePolicy as LeavePolicyModel;
 use App\Models\LeaveTransaction;
 use App\Models\LeaveType;
@@ -59,6 +61,8 @@ use App\Policies\HolidayPolicy;
 use App\Policies\LeavePolicy;
 use App\Policies\LeaveEntitlementPolicy;
 use App\Policies\LeavePolicyRecordPolicy;
+use App\Policies\LeaveRequestAttachmentPolicy;
+use App\Policies\LeaveRequestPolicy;
 use App\Policies\LeaveTransactionPolicy;
 use App\Policies\LeaveTypePolicy;
 use App\Policies\MessagePolicy;
@@ -107,6 +111,8 @@ class AuthServiceProvider extends ServiceProvider
         LeavePolicyModel::class => LeavePolicyRecordPolicy::class,
         LeaveEntitlement::class => LeaveEntitlementPolicy::class,
         LeaveTransaction::class => LeaveTransactionPolicy::class,
+        LeaveRequest::class => LeaveRequestPolicy::class,
+        LeaveRequestAttachment::class => LeaveRequestAttachmentPolicy::class,
         HolidayCalendar::class => HolidayCalendarPolicy::class,
         Holiday::class => HolidayPolicy::class,
         WorkdayPattern::class => WorkdayPatternPolicy::class,

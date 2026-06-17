@@ -110,11 +110,26 @@ Workday pattern foundation
 Filament leave administration baseline
 Seeder-backed demo leave data
 Basic leave foundation tests
+v1.3.1-leave-balance
+Sprint 4B leave balance completed
+Leave entitlement management
+Leave transaction ledger
+Leave balance and entitlement services
+Seeder-backed entitlement generation
+Leave balance validation tests
+v1.3.2-leave-request
+Sprint 4C leave request completed
+Leave request and attachment management
+Leave calculation and request orchestration services
+Employee portal leave request feature
+Admin leave request monitoring resource
+Seeder-backed leave request demo data
+Leave request validation tests
 Repository State
 
 Current stable milestone:
 
-v1.3.0-leave-foundation
+v1.3.2-leave-request
 
 Repository status expectations:
 
@@ -125,7 +140,7 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.3.0-leave-foundation
+v1.3.2-leave-request
 
 Sprint 4A Completion
 
@@ -208,8 +223,45 @@ php artisan test - passed
 Next planned sprint:
 Sprint 4C - Leave Request
 
+Sprint 4C Completion
+
+Milestone candidate:
+v1.3.2-leave-request
+
+Tables added:
+leave_requests
+leave_request_attachments
+
+Models added:
+LeaveRequest
+LeaveRequestAttachment
+
+Services added:
+LeaveCalculationService
+LeaveRequestService
+
+Resources added:
+LeaveRequestResource
+Employee portal leave request feature
+
+Seeders added:
+LeaveRequestSeeder
+
+Tests added:
+LeaveRequestSprint4CTest
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize - passed
+php artisan migrate --seed - passed
+php artisan test - passed
+
+Next planned sprint:
+Sprint 4D - Leave Approval Stable
+
 Next Sprint
-Sprint 4C - Leave Request
+Sprint 4D - Leave Approval Stable
 
 Sprint 4 prerequisites already completed:
 

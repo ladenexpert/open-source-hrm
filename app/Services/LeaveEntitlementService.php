@@ -261,6 +261,24 @@ class LeaveEntitlementService
         });
     }
 
+    public function getActiveEntitlement(Employee $employee, LeaveType $leaveType, Carbon $date): ?LeaveEntitlement
+    {
+        $this->assertSharedCompanyScope((int) $employee->company_id, (int) $leaveType->company_id);
+
+        $referenceDate = $date->copy()->startOfDay();
+
+        return LeaveEntitlement::query()
+            ->where('company_id', $employee->company_id)
+            ->where('employee_id', $employee->getKey())
+            ->where('leave_type_id', $leaveType->getKey())
+            ->where('year', $referenceDate->year)
+            ->where(function ($query) use ($referenceDate): void {
+                $query->whereNull('expires_at')
+                    ->orWhereDate('expires_at', '>=', $referenceDate->toDateString());
+            })
+            ->first();
+    }
+
     private function referenceDateForYear(int $year): Carbon
     {
         $today = now('Asia/Jakarta')->startOfDay();
