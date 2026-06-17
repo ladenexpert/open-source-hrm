@@ -149,7 +149,7 @@ Repository State
 
 Current stable milestone:
 
-v1.3.4-access-scope-hardening
+v1.3.5-stabilization-check
 
 Repository status expectations:
 
@@ -160,7 +160,48 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.3.4-access-scope-hardening
+v1.3.5-stabilization-check
+
+## License Hygiene Policy
+
+This product targets commercial SaaS distribution under an MIT-licensed stack.
+
+All dependencies must remain compatible with commercial use.
+
+### Allowed licenses
+
+- MIT
+- Apache-2.0
+- BSD-2-Clause
+- BSD-3-Clause
+- ISC
+- Dual-licensed packages where MIT or BSD is available
+
+### Prohibited licenses
+
+- GPL v2 / GPL v3 (unless dev-only dependency with no production impact)
+- AGPL v3
+- BUSL
+- SSPL
+- Proprietary commercial licenses without explicit approval
+
+### Process for adding new packages
+
+1. Verify package license before composer require
+2. If license is not allowed: STOP
+3. Document package and license in Known Issues
+4. Wait for repository owner approval
+5. Run composer licenses after any composer require
+
+### Audit history
+
+- v1.3.5: Initial audit - all packages MIT / Apache / BSD / ISC
+
+One noted exception:
+
+nette/* packages are dual-licensed BSD-3-Clause + GPL.
+
+The project uses BSD-3-Clause terms only and those packages are present as development dependencies with no production deployment impact.
 
 Sprint 4A Completion
 
@@ -391,16 +432,54 @@ php artisan optimize - passed
 php artisan migrate --seed - passed
 php artisan test - passed (151 tests, 338 assertions)
 
+Sprint 4D-Stabilization Check Completion
+
+Milestone candidate:
+v1.3.5-stabilization-check
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize:clear - passed
+php artisan migrate:fresh --seed - passed
+php artisan test - passed (151 tests, 338 assertions)
+
+License audit:
+Clean
+All packages verified as MIT / Apache / BSD / ISC compatible for commercial SaaS use.
+nette/* remains the only noted dual-licensed exception and is used under BSD-3-Clause terms as a development-only dependency.
+
+Schema deferral:
+work_locations does not yet contain latitude, longitude, or radius_meters.
+GPS columns are deferred to v1.4.0-attendance-foundation.
+
+Phase transition confirmation:
+Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
+Phase 3 Attendance Enterprise is confirmed next, starting with v1.4.0-attendance-foundation.
+
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
 Shared group-scoped HR master data remains intentionally available to same-group HR master-data managers.
 Approval workflow business rules were not rewritten; this sprint only hardened reusable access-scope boundaries and role detection.
 
 Next planned phase:
-Phase 3 - Attendance Enterprise
+Phase 3 - Attendance Enterprise (starts with v1.4.0-attendance-foundation)
 
 Next Sprint
-v1.4.x Attendance
+v1.4.0-attendance-foundation
+
+Roadmap Update
+
+Phase 2 Complete
+v1.3.0 Leave Foundation
+v1.3.1 Leave Balance
+v1.3.2 Leave Request
+v1.3.3 Leave Approval Stable
+v1.3.4 Access Scope Hardening
+v1.3.5 Stabilization Check
+
+Next Phase
+v1.4.0 Attendance Foundation
 
 Sprint 4 prerequisites already completed:
 

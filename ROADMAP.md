@@ -1,6 +1,7 @@
 HRMS Enterprise Roadmap
 Completed
 
+## Sprint 1
 ## v1.0-security-stable
 - Security hardening
 - RBAC & Policies
@@ -10,6 +11,7 @@ Completed
 - Composer reproducibility
 - Local XAMPP compatibility
 
+## Sprint 2
 ## v1.1-tenancy-foundation
 - Tenancy Foundation
 - Company management
@@ -21,6 +23,7 @@ Completed
 - Company Subscriptions
 - Company-scoped models, policies, and resources
 
+## Sprint 3
 ## v1.2-indonesian-hr-foundation
 - Company Group (Holding/Subsidiary) foundation
 - Indonesian HR Master Data
@@ -78,43 +81,110 @@ Completed
 - Reimbursement
 - Loan
 
-### Planned
-
+## Phase 2 – Leave Management (Completed)
 ## Sprint 4
-- Leave Enterprise
+## v1.3.0-leave-foundation
+- Leave Types
+- Leave Policies
+- Holiday Calendars
+- Workday Patterns
 
+## v1.3.1-leave-balance
+- Leave Entitlements
+- Leave Transactions
+- Leave Balance Services
+
+## v1.3.2-leave-request
+- Employee Leave Portal
+- Leave Request Workflow
+- Attachment Support
+- Leave Calculation
+
+## v1.3.3-leave-approval-stable
+- Approval Engine Integration
+- Leave Approval Flow
+- Balance Deduction
+- Balance Restore
+
+## v1.3.4-access-scope-hardening
+- Super Admin Scope
+- Company Group Scope
+- Company Scope
+- Portal Scope Hardening
+
+## v1.3.5-stabilization-check
+- Full Validation
+- License Audit
+- UAT Verification
+- Phase 2 Closure
+
+## Current Phase
+
+## Phase 3 – Attendance Enterprise
 ## Sprint 5
-- Holiday & Working Calendar Engine
+## v1.4.0-attendance-foundation
+- Attendance Policy
+- Shift Pattern
+- Shift Assignment
+- Work Location GPS Foundation
+- Attendance Resources
+- Attendance Services
+
+## v1.4.1-attendance-log
+- Clock In / Clock Out
+- GPS Capture
+- Selfie Capture
+- Raw Attendance Logs
+
+## v1.4.2-attendance-calculation
+- Late Calculation
+- Early Leave Calculation
+- Work Hour Calculation
+- Overnight Shift Support
+
+## v1.4.3-attendance-correction
+- Attendance Correction Request
+- Approval Workflow Integration
+
+## v1.4.4-attendance-portal
+- Employee Attendance Portal
+- Attendance History
+- Attendance Dashboard
+- Future Phases
 
 ## Sprint 6
-- Attendance Enterprise
+## Phase 4 – Overtime Management
+- Overtime Policies
+- Overtime Requests
+- Overtime Approval
+- Overtime Calculation
 
 ## Sprint 7
-- Overtime Management
+## Phase 5 – Payroll Foundation
+- Payroll Periods
+- Payroll Runs
+- Salary Components
+- Payslips
 
 ## Sprint 8
-- Payroll Foundation
+## Phase 6 – Indonesian Compliance
+- BPJS
+- PPh21
+- THR
 
 ## Sprint 9
-- BPJS / PPh21 / THR Foundation
-
-## Sprint 10
-- Employee Self-Service Enhancement
+## Phase 7 – Employee Self Service Enhancement
 - Import / Export Framework
 - Bulk Operations
-- UX & Productivity Improvements
+- Productivity Tools
 
+## Sprint 10
+## Phase 8 – Recruitment Management
 ## Sprint 11
-- Recruitment Management
-
+## Phase 9 – Performance Management
 ## Sprint 12
-- Performance Management (KPI & Appraisal)
-
+## Phase 10 – Reimbursement & Loan
 ## Sprint 13
-- Reimbursement & Loan Management
-
+## Phase 11 – Learning Management System
 ## Sprint 14
-- Learning Management System (LMS)
-
-## Sprint 15
-- SaaS Billing & Subscription Automation
+## Phase 12 – SaaS Billing & Subscription Automation
