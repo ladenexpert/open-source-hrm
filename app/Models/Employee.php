@@ -458,6 +458,16 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->hasMany(EmployeeSchedule::class);
     }
 
+    public function attendanceLogs(): HasMany
+    {
+        return $this->hasMany(AttendanceLog::class);
+    }
+
+    public function createdAttendanceLogs(): HasMany
+    {
+        return $this->hasMany(AttendanceLog::class, 'created_by');
+    }
+
     public function leaveTransactions(): HasMany
     {
         return $this->hasMany(LeaveTransaction::class);

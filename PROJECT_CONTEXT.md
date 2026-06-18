@@ -158,7 +158,7 @@ Repository State
 
 Current stable milestone:
 
-v1.4.0-attendance-foundation
+v1.4.1-attendance-log
 
 Repository status expectations:
 
@@ -169,7 +169,7 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.4.0-attendance-foundation
+v1.4.1-attendance-log
 
 ## License Hygiene Policy
 
@@ -500,7 +500,7 @@ AttendanceFoundationV140Test
 Phase 3 ADR baseline:
 ADR-1 Employee override > Department > Branch > Company default shift priority is locked.
 ADR-2 Employee override > AttendancePolicy > fixed location-mode resolution is locked.
-ADR-3 Overnight shifts are supported when end time crosses or equals start time on the next day.
+ADR-3 Overnight shifts are supported when end_time is earlier than start_time. Equal start and end time is invalid and must be rejected.
 ADR-4 Work locations are now GPS-ready through nullable latitude, longitude, and radius_meters columns.
 ADR-5 Fixed, flexible, and scheduled location strategies are preserved for later logging and validation sprints.
 ADR-6 Office and manufacturing deployments share the same configurable attendance schema.
@@ -526,6 +526,44 @@ php artisan optimize:clear - passed
 php artisan migrate:fresh --seed - passed
 php artisan test - passed (178 tests, 386 assertions)
 
+Attendance Log Completion
+
+Milestone candidate:
+v1.4.1-attendance-log
+
+Tables added:
+attendance_logs
+
+Models added:
+AttendanceLog
+
+Services added:
+AttendanceLogService
+AttendanceLocationValidationService
+
+Resources added:
+AttendanceLogResource
+Employee portal attendance clock capability
+
+Architecture notes:
+Attendance logs are event-based raw records with one row per clock event.
+Raw attendance logs are immutable through policy and admin UI.
+Source tracking is stored on each log entry.
+GPS latitude and longitude are stored as snapshot fields on the raw log.
+Selfie path is prepared as a nullable snapshot field on the raw log.
+Invalid location attempts are still stored for audit with is_valid=false and validation_message.
+No late, early out, absent, work duration, overtime, or payroll calculation is implemented in this sprint.
+
+Tests added:
+AttendanceLogV141Test
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize:clear - passed
+php artisan migrate:fresh --seed - passed
+php artisan test - passed (200 tests, 451 assertions)
+
 License audit:
 Clean
 All packages verified as MIT / Apache / BSD / ISC compatible for commercial SaaS use.
@@ -537,20 +575,23 @@ GPS-ready attendance location support is available for Phase 3 attendance work.
 
 Phase transition confirmation:
 Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
-Phase 3 Attendance Enterprise is now active and starts from the completed v1.4.0-attendance-foundation baseline.
+Phase 3 Attendance Enterprise is active on the completed v1.4.1-attendance-log baseline.
 
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
 Shared group-scoped HR master data remains intentionally available to same-group HR master-data managers.
 Approval workflow business rules were not rewritten; this sprint only hardened reusable access-scope boundaries and role detection.
-Shift resolution intentionally returns null when no employee schedule, assignment, or company default applies; v1.4.1 attendance logging will decide how to surface or enforce that gap.
+Browser geolocation capture is not yet implemented in the portal UI, but the raw logging service supports GPS payloads.
+Selfie upload is not yet implemented in the portal UI, but selfie_path is supported on the raw log model and service payload.
+Legacy Attendance remains in place for coexistence; raw enterprise attendance logging is implemented separately in AttendanceLog.
+Shift resolution intentionally returns null when no employee schedule, assignment, or company default applies; raw attendance logging stores that state without introducing calculation.
 WorkdayPatternDay uses the existing 1=Monday through 7=Sunday convention, so shift_pattern_details matches that internal convention instead of the originally proposed 0=Sunday through 6=Saturday format.
 
 Next planned phase:
-Phase 3 - Attendance Enterprise (v1.4.1 Attendance Log is next)
+Phase 3 - Attendance Enterprise (v1.4.2 Attendance Calculation is next)
 
 Next Sprint
-v1.4.1-attendance-log
+v1.4.2-attendance-calculation
 
 Roadmap Update
 
@@ -563,7 +604,7 @@ v1.3.4 Access Scope Hardening
 v1.3.5 Stabilization Check
 
 Next Phase
-v1.4.1 Attendance Log
+v1.4.2 Attendance Calculation
 
 Sprint 4 prerequisites already completed:
 

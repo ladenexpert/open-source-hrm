@@ -68,6 +68,11 @@ class ShiftPattern extends Model
         return $this->hasMany(EmployeeSchedule::class);
     }
 
+    public function attendanceLogs(): HasMany
+    {
+        return $this->hasMany(AttendanceLog::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

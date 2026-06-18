@@ -78,4 +78,9 @@ class WorkLocation extends Model
     {
         return $this->hasMany(EmployeeSchedule::class);
     }
+
+    public function attendanceLogs(): HasMany
+    {
+        return $this->hasMany(AttendanceLog::class);
+    }
 }

@@ -56,6 +56,7 @@ class AdminPanelProvider extends PanelProvider
                 'Work space',
                 'Organization',
                 'HR Management',
+                'Attendance',
             ])
             ->authMiddleware([
                 Authenticate::class,
