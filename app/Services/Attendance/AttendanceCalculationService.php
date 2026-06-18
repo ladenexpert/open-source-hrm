@@ -4,6 +4,7 @@ namespace App\Services\Attendance;
 
 use App\Models\AttendanceLog;
 use App\Models\AttendancePolicy;
+use App\Models\AttendanceCorrection;
 use App\Models\AttendanceSummary;
 use App\Models\Employee;
 use App\Models\Holiday;
@@ -42,6 +43,8 @@ class AttendanceCalculationService
         $logWindow = $this->resolveLogWindow($date, $schedule['scheduled_start_at'], $schedule['scheduled_end_at']);
         $logs = $this->resolveLogs($employee, $logWindow['window_start'], $logWindow['window_end']);
         $actuals = $this->resolveActuals($logs['valid_logs']);
+        $approvedCorrection = $this->resolveApprovedCorrection($employee, $date);
+        $actuals = $this->applyCorrectionOverlay($actuals, $approvedCorrection);
         $workMinutes = $this->calculateWorkMinutes(
             $actuals['actual_in_at'],
             $actuals['actual_out_at'],
@@ -58,7 +61,7 @@ class AttendanceCalculationService
             $attendancePolicy,
         );
         $isComplete = $actuals['actual_in_at'] !== null && $actuals['actual_out_at'] !== null;
-        $notes = $this->buildCalculationNotes($logs['invalid_logs'], $leaveRequest);
+        $notes = $this->buildCalculationNotes($logs['invalid_logs'], $leaveRequest, $approvedCorrection);
         $status = $this->resolveStatus(
             leaveRequest: $leaveRequest,
             holiday: $holiday,
@@ -88,7 +91,7 @@ class AttendanceCalculationService
             'shift_assignment_id' => $resolution->shiftAssignment?->getKey(),
             'employee_schedule_id' => $resolution->employeeSchedule?->getKey(),
             'attendance_policy_id' => $attendancePolicy?->getKey(),
-            'work_location_id' => $this->resolveWorkLocation($employee, $resolution)?->getKey(),
+            'work_location_id' => $this->resolveWorkLocation($employee, $resolution, $approvedCorrection)?->getKey(),
             'scheduled_start_at' => $schedule['scheduled_start_at'],
             'scheduled_end_at' => $schedule['scheduled_end_at'],
             'break_duration_minutes' => $schedule['break_duration_minutes'],
@@ -276,6 +279,40 @@ class AttendanceCalculationService
         ];
     }
 
+    private function resolveApprovedCorrection(Employee $employee, Carbon $date): ?AttendanceCorrection
+    {
+        return AttendanceCorrection::query()
+            ->forCompany($employee->getEffectiveCompanyId())
+            ->forEmployee($employee)
+            ->forDate($date)
+            ->approved()
+            ->with('approvedWorkLocation')
+            ->orderByDesc('approved_at')
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * @param array{actual_in_at: ?Carbon, actual_out_at: ?Carbon, first_log_id: ?int, last_log_id: ?int} $actuals
+     * @return array{actual_in_at: ?Carbon, actual_out_at: ?Carbon, first_log_id: ?int, last_log_id: ?int}
+     */
+    private function applyCorrectionOverlay(array $actuals, ?AttendanceCorrection $approvedCorrection): array
+    {
+        if (! $approvedCorrection instanceof AttendanceCorrection) {
+            return $actuals;
+        }
+
+        if ($approvedCorrection->approved_clock_in_at instanceof Carbon) {
+            $actuals['actual_in_at'] = $approvedCorrection->approved_clock_in_at->copy();
+        }
+
+        if ($approvedCorrection->approved_clock_out_at instanceof Carbon) {
+            $actuals['actual_out_at'] = $approvedCorrection->approved_clock_out_at->copy();
+        }
+
+        return $actuals;
+    }
+
     private function calculateWorkMinutes(?Carbon $actualInAt, ?Carbon $actualOutAt, int $breakDurationMinutes): int
     {
         if (! $actualInAt instanceof Carbon || ! $actualOutAt instanceof Carbon || ! $actualOutAt->greaterThan($actualInAt)) {
@@ -311,12 +348,24 @@ class AttendanceCalculationService
             : 0;
     }
 
-    private function buildCalculationNotes(Collection $invalidLogs, ?LeaveRequest $leaveRequest): ?string
+    private function buildCalculationNotes(
+        Collection $invalidLogs,
+        ?LeaveRequest $leaveRequest,
+        ?AttendanceCorrection $approvedCorrection,
+    ): ?string
     {
         $notes = [];
 
         if ($invalidLogs->isNotEmpty()) {
             $notes[] = sprintf('%d invalid logs ignored for calculation.', $invalidLogs->count());
+        }
+
+        if ($approvedCorrection instanceof AttendanceCorrection) {
+            $notes[] = sprintf(
+                'Approved attendance correction #%d applied using overlay mode (%s).',
+                $approvedCorrection->getKey(),
+                AttendanceCorrection::correctionTypeLabels()[$approvedCorrection->correction_type] ?? $approvedCorrection->correction_type,
+            );
         }
 
         if ($leaveRequest instanceof LeaveRequest && $leaveRequest->is_half_day) {
@@ -375,8 +424,16 @@ class AttendanceCalculationService
         return AttendanceSummary::STATUS_PRESENT;
     }
 
-    private function resolveWorkLocation(Employee $employee, ShiftResolutionResult $resolution): ?WorkLocation
+    private function resolveWorkLocation(
+        Employee $employee,
+        ShiftResolutionResult $resolution,
+        ?AttendanceCorrection $approvedCorrection = null,
+    ): ?WorkLocation
     {
+        if ($approvedCorrection?->approvedWorkLocation instanceof WorkLocation) {
+            return $approvedCorrection->approvedWorkLocation;
+        }
+
         if ($resolution->employeeSchedule?->workLocation instanceof WorkLocation) {
             return $resolution->employeeSchedule->workLocation;
         }

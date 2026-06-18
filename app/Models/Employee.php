@@ -463,6 +463,46 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->hasMany(AttendanceLog::class);
     }
 
+    public function attendanceSummaries(): HasMany
+    {
+        return $this->hasMany(AttendanceSummary::class);
+    }
+
+    public function attendanceCorrections(): HasMany
+    {
+        return $this->hasMany(AttendanceCorrection::class);
+    }
+
+    public function submittedAttendanceCorrections(): HasMany
+    {
+        return $this->hasMany(AttendanceCorrection::class, 'submitted_by');
+    }
+
+    public function approvedAttendanceCorrections(): HasMany
+    {
+        return $this->hasMany(AttendanceCorrection::class, 'approved_by');
+    }
+
+    public function rejectedAttendanceCorrections(): HasMany
+    {
+        return $this->hasMany(AttendanceCorrection::class, 'rejected_by');
+    }
+
+    public function cancelledAttendanceCorrections(): HasMany
+    {
+        return $this->hasMany(AttendanceCorrection::class, 'cancelled_by');
+    }
+
+    public function createdAttendanceCorrections(): HasMany
+    {
+        return $this->hasMany(AttendanceCorrection::class, 'created_by');
+    }
+
+    public function updatedAttendanceCorrections(): HasMany
+    {
+        return $this->hasMany(AttendanceCorrection::class, 'updated_by');
+    }
+
     public function createdAttendanceLogs(): HasMany
     {
         return $this->hasMany(AttendanceLog::class, 'created_by');

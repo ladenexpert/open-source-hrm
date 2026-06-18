@@ -4,11 +4,14 @@ namespace App\Filament\Resources\ApprovalRequests;
 
 use App\Enums\ApprovalModuleType;
 use App\Enums\ApprovalRequestStatus;
+use App\Filament\Resources\Attendance\AttendanceCorrectionResource;
 use App\Filament\Resources\ApprovalRequests\Pages\ListApprovalRequests;
 use App\Filament\Resources\ApprovalRequests\Pages\ViewApprovalRequest;
 use App\Models\ApprovalRequest;
+use App\Models\AttendanceCorrection;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
+use App\Services\Attendance\AttendanceCorrectionService;
 use App\Services\ApprovalActionService;
 use App\Services\Leave\LeaveApprovalService;
 use App\Support\ApprovalRoleMap;
@@ -93,6 +96,8 @@ class ApprovalRequestResource extends Resource
 
                         if ($record->approvable instanceof LeaveRequest) {
                             app(LeaveApprovalService::class)->processApproval($record, Auth::user(), 'approved', $data['comments'] ?? null);
+                        } elseif ($record->approvable instanceof AttendanceCorrection) {
+                            app(AttendanceCorrectionService::class)->processApproval($record, Auth::user(), 'approved', $data['comments'] ?? null);
                         } else {
                             app(ApprovalActionService::class)->approveCurrentStep($record, Auth::user(), $data['comments'] ?? null);
                         }
@@ -117,6 +122,8 @@ class ApprovalRequestResource extends Resource
 
                         if ($record->approvable instanceof LeaveRequest) {
                             app(LeaveApprovalService::class)->processApproval($record, Auth::user(), 'rejected', $data['comments'] ?? null);
+                        } elseif ($record->approvable instanceof AttendanceCorrection) {
+                            app(AttendanceCorrectionService::class)->processApproval($record, Auth::user(), 'rejected', $data['comments'] ?? null);
                         } else {
                             app(ApprovalActionService::class)->rejectCurrentStep($record, Auth::user(), $data['comments'] ?? null);
                         }

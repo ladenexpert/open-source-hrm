@@ -154,11 +154,22 @@ GPS-ready work location schema
 Attendance resolver services
 Attendance admin resources
 Attendance foundation regression coverage added
+v1.4.3-attendance-correction
+Attendance correction workflow completed
+AttendanceCorrection model implemented
+AttendanceCorrectionService implemented
+AttendanceCorrectionResource implemented
+Employee portal correction request implemented
+Approval governance integration implemented
+Attendance correction overlay mode implemented
+Attendance summary recalculation after approval implemented
+Raw attendance logs remain immutable
+Attendance summaries remain rebuildable calculated snapshots
 Repository State
 
 Current stable milestone:
 
-v1.4.2-attendance-calculation
+v1.4.3-attendance-correction
 
 Repository status expectations:
 
@@ -169,7 +180,12 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.4.1-attendance-log
+v1.4.3-attendance-correction
+
+Current test baseline:
+260 tests
+617 assertions
+No regressions
 
 ## License Hygiene Policy
 
@@ -602,6 +618,42 @@ php artisan optimize:clear - passed
 php artisan migrate:fresh --seed - passed
 php artisan test - passed (230 tests, 533 assertions)
 
+Attendance Correction Completion
+
+Milestone candidate:
+v1.4.3-attendance-correction
+
+Models added:
+AttendanceCorrection
+
+Services added:
+AttendanceCorrectionService
+
+Resources added:
+AttendanceCorrectionResource
+Employee portal correction request capability
+
+Architecture notes:
+AttendanceLog
+    ->
+AttendanceCorrection (approved overlay)
+    ->
+AttendanceCalculationService
+    ->
+AttendanceSummary
+AttendanceLog remains the immutable audit trail for raw clock events.
+AttendanceCorrection acts as the approved adjustment layer and never overwrites raw logs.
+AttendanceSummary remains a rebuildable calculated snapshot.
+Approved corrections trigger recalculation through AttendanceCalculationService.
+Raw attendance logs are never overwritten or backfilled by correction records.
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize:clear - passed
+php artisan migrate:fresh --seed - passed
+php artisan test - passed (260 tests, 617 assertions)
+
 License audit:
 Clean
 All packages verified as MIT / Apache / BSD / ISC compatible for commercial SaaS use.
@@ -613,7 +665,7 @@ GPS-ready attendance location support is available for Phase 3 attendance work.
 
 Phase transition confirmation:
 Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
-Phase 3 Attendance Enterprise is active on the completed v1.4.2-attendance-calculation baseline.
+Phase 3 Attendance Enterprise is active on the completed v1.4.3-attendance-correction baseline.
 
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
@@ -626,17 +678,26 @@ Shift resolution intentionally returns null when no employee schedule, assignmen
 WorkdayPatternDay uses the existing 1=Monday through 7=Sunday convention, so shift_pattern_details matches that internal convention instead of the originally proposed 0=Sunday through 6=Saturday format.
 Half-day leave is already modeled in LeaveRequest, but attendance summary leave override remains limited to approved full-day leave handling in v1.4.2.
 Holiday and weekend resolution uses the existing company-scoped active holiday calendar and active/default workday pattern; no employee-specific calendar assignment layer has been introduced yet.
-No attendance correction request flow is implemented yet.
 No overtime calculation is implemented yet.
 No payroll integration is implemented yet.
+Approved correction reversal remains deferred to a future sprint.
+Bulk correction remains deferred.
+Monthly attendance lock remains deferred.
 
 Next planned phase:
-Phase 3 - Attendance Enterprise (v1.4.3 Attendance Correction is next)
+Phase 3 - Attendance Enterprise (v1.4.4 Attendance Portal Enhancement is next)
 
 Next Sprint
-v1.4.3-attendance-correction
+v1.4.4-attendance-portal-enhancement
 
 Roadmap Update
+
+Sprint 5 Attendance Enterprise
+✅ v1.4.0 Attendance Foundation
+✅ v1.4.1 Attendance Log
+✅ v1.4.2 Attendance Calculation
+✅ v1.4.3 Attendance Correction
+⏳ v1.4.4 Attendance Portal Enhancement
 
 Phase 2 Complete
 v1.3.0 Leave Foundation
@@ -647,7 +708,10 @@ v1.3.4 Access Scope Hardening
 v1.3.5 Stabilization Check
 
 Next Phase
-v1.4.3 Attendance Correction
+v1.4.4 Attendance Portal Enhancement
+
+Next Planned Milestone:
+v1.4.4-attendance-portal-enhancement
 
 Sprint 4 prerequisites already completed:
 

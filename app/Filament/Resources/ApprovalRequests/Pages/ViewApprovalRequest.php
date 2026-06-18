@@ -5,7 +5,11 @@ namespace App\Filament\Resources\ApprovalRequests\Pages;
 use App\Filament\Resources\ApprovalRequests\ApprovalRequestResource;
 use App\Filament\Resources\ApprovalRequests\Schemas\ApprovalRequestInfolist;
 use App\Models\ApprovalRequest;
+use App\Models\AttendanceCorrection;
+use App\Models\LeaveRequest;
+use App\Services\Attendance\AttendanceCorrectionService;
 use App\Services\ApprovalActionService;
+use App\Services\Leave\LeaveApprovalService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -30,7 +34,16 @@ class ViewApprovalRequest extends ViewRecord
                 ])
                 ->visible(fn (): bool => Gate::forUser(Auth::user())->allows('approve', $this->record))
                 ->action(function (array $data): void {
-                    app(ApprovalActionService::class)->approveCurrentStep($this->record, Auth::user(), $data['comments'] ?? null);
+                    $this->record->loadMissing('approvable');
+
+                    if ($this->record->approvable instanceof LeaveRequest) {
+                        app(LeaveApprovalService::class)->processApproval($this->record, Auth::user(), 'approved', $data['comments'] ?? null);
+                    } elseif ($this->record->approvable instanceof AttendanceCorrection) {
+                        app(AttendanceCorrectionService::class)->processApproval($this->record, Auth::user(), 'approved', $data['comments'] ?? null);
+                    } else {
+                        app(ApprovalActionService::class)->approveCurrentStep($this->record, Auth::user(), $data['comments'] ?? null);
+                    }
+
                     $this->record->refresh();
 
                     Notification::make()->title('Approval step completed.')->success()->send();
@@ -45,7 +58,16 @@ class ViewApprovalRequest extends ViewRecord
                 ])
                 ->visible(fn (): bool => Gate::forUser(Auth::user())->allows('reject', $this->record))
                 ->action(function (array $data): void {
-                    app(ApprovalActionService::class)->rejectCurrentStep($this->record, Auth::user(), $data['comments'] ?? null);
+                    $this->record->loadMissing('approvable');
+
+                    if ($this->record->approvable instanceof LeaveRequest) {
+                        app(LeaveApprovalService::class)->processApproval($this->record, Auth::user(), 'rejected', $data['comments'] ?? null);
+                    } elseif ($this->record->approvable instanceof AttendanceCorrection) {
+                        app(AttendanceCorrectionService::class)->processApproval($this->record, Auth::user(), 'rejected', $data['comments'] ?? null);
+                    } else {
+                        app(ApprovalActionService::class)->rejectCurrentStep($this->record, Auth::user(), $data['comments'] ?? null);
+                    }
+
                     $this->record->refresh();
 
                     Notification::make()->title('Approval request rejected.')->success()->send();

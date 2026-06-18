@@ -2,12 +2,15 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\Attendance\AttendanceCorrectionResource as AdminAttendanceCorrectionResource;
 use App\Filament\Resources\LeaveRequests\LeaveRequestResource;
 use App\Filament\Resources\ApprovalRequests\ApprovalRequestResource;
 use App\Models\ApprovalRequest;
 use App\Models\ApprovalRequestStep;
+use App\Models\AttendanceCorrection;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
+use App\Services\Attendance\AttendanceCorrectionService;
 use App\Services\ApprovalActionService;
 use App\Services\Leave\LeaveApprovalService;
 use App\Support\OrganizationScope;
@@ -127,6 +130,8 @@ class MyApprovalInbox extends Page implements HasTable
                     ->action(function (ApprovalRequestStep $record, array $data): void {
                         if ($this->resolveLeaveRequest($record->request) instanceof LeaveRequest) {
                             app(LeaveApprovalService::class)->processApproval($record->request, auth()->user(), 'approved', $data['comments'] ?? null);
+                        } elseif ($this->resolveAttendanceCorrection($record->request) instanceof AttendanceCorrection) {
+                            app(AttendanceCorrectionService::class)->processApproval($record->request, auth()->user(), 'approved', $data['comments'] ?? null);
                         } else {
                             app(ApprovalActionService::class)->approveCurrentStep($record->request, auth()->user(), $data['comments'] ?? null);
                         }
@@ -144,6 +149,8 @@ class MyApprovalInbox extends Page implements HasTable
                     ->action(function (ApprovalRequestStep $record, array $data): void {
                         if ($this->resolveLeaveRequest($record->request) instanceof LeaveRequest) {
                             app(LeaveApprovalService::class)->processApproval($record->request, auth()->user(), 'rejected', $data['comments'] ?? null);
+                        } elseif ($this->resolveAttendanceCorrection($record->request) instanceof AttendanceCorrection) {
+                            app(AttendanceCorrectionService::class)->processApproval($record->request, auth()->user(), 'rejected', $data['comments'] ?? null);
                         } else {
                             app(ApprovalActionService::class)->rejectCurrentStep($record->request, auth()->user(), $data['comments'] ?? null);
                         }
@@ -174,12 +181,34 @@ class MyApprovalInbox extends Page implements HasTable
         return $approvable;
     }
 
+    private function resolveAttendanceCorrection(?ApprovalRequest $approvalRequest): ?AttendanceCorrection
+    {
+        if (! $approvalRequest instanceof ApprovalRequest) {
+            return null;
+        }
+
+        $approvalRequest->loadMissing('approvable');
+        $approvable = $approvalRequest->approvable;
+
+        if (! $approvable instanceof AttendanceCorrection) {
+            return null;
+        }
+
+        return $approvable;
+    }
+
     private function resolveOpenUrl(ApprovalRequest $approvalRequest): string
     {
         $leaveRequest = $this->resolveLeaveRequest($approvalRequest);
 
         if ($leaveRequest instanceof LeaveRequest) {
             return LeaveRequestResource::getUrl('view', ['record' => $leaveRequest]);
+        }
+
+        $attendanceCorrection = $this->resolveAttendanceCorrection($approvalRequest);
+
+        if ($attendanceCorrection instanceof AttendanceCorrection) {
+            return AdminAttendanceCorrectionResource::getUrl('view', ['record' => $attendanceCorrection]);
         }
 
         return ApprovalRequestResource::getUrl('view', ['record' => $approvalRequest]);
