@@ -158,7 +158,7 @@ Repository State
 
 Current stable milestone:
 
-v1.4.1-attendance-log
+v1.4.2-attendance-calculation
 
 Repository status expectations:
 
@@ -564,6 +564,44 @@ php artisan optimize:clear - passed
 php artisan migrate:fresh --seed - passed
 php artisan test - passed (200 tests, 451 assertions)
 
+Attendance Calculation Completion
+
+Milestone candidate:
+v1.4.2-attendance-calculation
+
+Tables added:
+attendance_summaries
+
+Models added:
+AttendanceSummary
+
+Services added:
+AttendanceCalculationService
+
+Resources added:
+AttendanceSummaryResource
+Employee portal attendance summary view
+
+Architecture notes:
+attendance_summaries is the rebuildable daily snapshot layer for enterprise attendance calculation.
+Raw AttendanceLog records remain the source event stream and are not mutated during calculation.
+Attendance summaries are recalculated from attendance_logs, shift scheduling, attendance policies, approved leave, holidays, and workday patterns.
+Daily status enum is locked to present, late, early_out, absent, holiday, weekend, leave, incomplete, and no_schedule.
+Status priority is leave > holiday > weekend > no_schedule > absent > incomplete > late > early_out > present.
+If both late and early_out apply on the same day, status resolves to late while early_out_minutes remains populated.
+Overnight shifts are calculated as a single scheduled workday using the scheduled shift date.
+Late and early-out tolerance use AttendancePolicy minutes without introducing overtime logic.
+Invalid raw logs are ignored for actual_in_at and actual_out_at calculation but remain stored for audit and are noted on the summary.
+No correction workflow, overtime calculation, payroll integration, or monthly lock is implemented in this sprint.
+Legacy Attendance remains in place for coexistence; enterprise daily calculation is implemented separately through AttendanceSummary.
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize:clear - passed
+php artisan migrate:fresh --seed - passed
+php artisan test - passed (230 tests, 533 assertions)
+
 License audit:
 Clean
 All packages verified as MIT / Apache / BSD / ISC compatible for commercial SaaS use.
@@ -575,7 +613,7 @@ GPS-ready attendance location support is available for Phase 3 attendance work.
 
 Phase transition confirmation:
 Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
-Phase 3 Attendance Enterprise is active on the completed v1.4.1-attendance-log baseline.
+Phase 3 Attendance Enterprise is active on the completed v1.4.2-attendance-calculation baseline.
 
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
@@ -586,12 +624,17 @@ Selfie upload is not yet implemented in the portal UI, but selfie_path is suppor
 Legacy Attendance remains in place for coexistence; raw enterprise attendance logging is implemented separately in AttendanceLog.
 Shift resolution intentionally returns null when no employee schedule, assignment, or company default applies; raw attendance logging stores that state without introducing calculation.
 WorkdayPatternDay uses the existing 1=Monday through 7=Sunday convention, so shift_pattern_details matches that internal convention instead of the originally proposed 0=Sunday through 6=Saturday format.
+Half-day leave is already modeled in LeaveRequest, but attendance summary leave override remains limited to approved full-day leave handling in v1.4.2.
+Holiday and weekend resolution uses the existing company-scoped active holiday calendar and active/default workday pattern; no employee-specific calendar assignment layer has been introduced yet.
+No attendance correction request flow is implemented yet.
+No overtime calculation is implemented yet.
+No payroll integration is implemented yet.
 
 Next planned phase:
-Phase 3 - Attendance Enterprise (v1.4.2 Attendance Calculation is next)
+Phase 3 - Attendance Enterprise (v1.4.3 Attendance Correction is next)
 
 Next Sprint
-v1.4.2-attendance-calculation
+v1.4.3-attendance-correction
 
 Roadmap Update
 
@@ -604,7 +647,7 @@ v1.3.4 Access Scope Hardening
 v1.3.5 Stabilization Check
 
 Next Phase
-v1.4.2 Attendance Calculation
+v1.4.3 Attendance Correction
 
 Sprint 4 prerequisites already completed:
 

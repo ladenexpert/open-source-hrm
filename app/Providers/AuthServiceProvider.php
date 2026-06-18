@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Attendance;
 use App\Models\AttendanceLog;
 use App\Models\AttendancePolicy as AttendancePolicyModel;
+use App\Models\AttendanceSummary;
 use App\Models\ApprovalLog;
 use App\Models\ApprovalRequest;
 use App\Models\ApprovalWorkflow;
@@ -51,6 +52,7 @@ use App\Models\ContractType;
 use App\Policies\AttendancePolicy as AttendanceRecordPolicy;
 use App\Policies\AttendanceLogPolicy;
 use App\Policies\AttendancePolicyPolicy;
+use App\Policies\AttendanceSummaryPolicy;
 use App\Policies\ApprovalLogPolicy;
 use App\Policies\ApprovalRequestPolicy;
 use App\Policies\ApprovalWorkflowPolicy;
@@ -115,6 +117,7 @@ class AuthServiceProvider extends ServiceProvider
         Attendance::class => AttendanceRecordPolicy::class,
         AttendanceLog::class => AttendanceLogPolicy::class,
         AttendancePolicyModel::class => AttendancePolicyPolicy::class,
+        AttendanceSummary::class => AttendanceSummaryPolicy::class,
         ApprovalWorkflow::class => ApprovalWorkflowPolicy::class,
         ApprovalRequest::class => ApprovalRequestPolicy::class,
         ApprovalLog::class => ApprovalLogPolicy::class,
