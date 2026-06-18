@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Attendance;
+use App\Models\AttendancePolicy as AttendancePolicyModel;
 use App\Models\ApprovalLog;
 use App\Models\ApprovalRequest;
 use App\Models\ApprovalWorkflow;
@@ -17,6 +18,7 @@ use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmploymentStatus;
 use App\Models\EmploymentType;
+use App\Models\EmployeeSchedule;
 use App\Models\Event;
 use App\Models\IdentityType;
 use App\Models\JobGrade;
@@ -36,6 +38,8 @@ use App\Models\Payroll;
 use App\Models\Position;
 use App\Models\Religion;
 use App\Models\Shift;
+use App\Models\ShiftAssignment;
+use App\Models\ShiftPattern;
 use App\Models\SubscriptionPlan;
 use App\Models\Task;
 use App\Models\Topic;
@@ -43,7 +47,8 @@ use App\Models\WorkdayPattern;
 use App\Models\WorkLocation;
 use App\Models\Bank;
 use App\Models\ContractType;
-use App\Policies\AttendancePolicy;
+use App\Policies\AttendancePolicy as AttendanceRecordPolicy;
+use App\Policies\AttendancePolicyPolicy;
 use App\Policies\ApprovalLogPolicy;
 use App\Policies\ApprovalRequestPolicy;
 use App\Policies\ApprovalWorkflowPolicy;
@@ -55,6 +60,7 @@ use App\Policies\CompanySubscriptionPolicy;
 use App\Policies\CostCenterPolicy;
 use App\Policies\DepartmentPolicy;
 use App\Policies\EmployeePolicy;
+use App\Policies\EmployeeSchedulePolicy;
 use App\Policies\EventPolicy;
 use App\Policies\HolidayCalendarPolicy;
 use App\Policies\HolidayPolicy;
@@ -70,6 +76,8 @@ use App\Policies\PayrollPolicy;
 use App\Policies\PositionPolicy;
 use App\Policies\ScopedMasterDataPolicy;
 use App\Policies\ShiftPolicy;
+use App\Policies\ShiftAssignmentPolicy;
+use App\Policies\ShiftPatternPolicy;
 use App\Policies\SubscriptionPlanPolicy;
 use App\Policies\TaskPolicy;
 use App\Policies\TopicPolicy;
@@ -102,7 +110,8 @@ class AuthServiceProvider extends ServiceProvider
         Department::class => DepartmentPolicy::class,
         Position::class => PositionPolicy::class,
         Shift::class => ShiftPolicy::class,
-        Attendance::class => AttendancePolicy::class,
+        Attendance::class => AttendanceRecordPolicy::class,
+        AttendancePolicyModel::class => AttendancePolicyPolicy::class,
         ApprovalWorkflow::class => ApprovalWorkflowPolicy::class,
         ApprovalRequest::class => ApprovalRequestPolicy::class,
         ApprovalLog::class => ApprovalLogPolicy::class,
@@ -113,9 +122,12 @@ class AuthServiceProvider extends ServiceProvider
         LeaveTransaction::class => LeaveTransactionPolicy::class,
         LeaveRequest::class => LeaveRequestPolicy::class,
         LeaveRequestAttachment::class => LeaveRequestAttachmentPolicy::class,
+        EmployeeSchedule::class => EmployeeSchedulePolicy::class,
         HolidayCalendar::class => HolidayCalendarPolicy::class,
         Holiday::class => HolidayPolicy::class,
         WorkdayPattern::class => WorkdayPatternPolicy::class,
+        ShiftPattern::class => ShiftPatternPolicy::class,
+        ShiftAssignment::class => ShiftAssignmentPolicy::class,
         Payroll::class => PayrollPolicy::class,
         Message::class => MessagePolicy::class,
         Topic::class => TopicPolicy::class,

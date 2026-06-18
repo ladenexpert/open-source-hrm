@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Validation\ValidationException;
 
 class Company extends Model
 {
@@ -25,15 +26,48 @@ class Company extends Model
         'tax_id',
         'company_type',
         'is_legal_entity',
+        'default_attendance_policy_id',
+        'default_shift_pattern_id',
         'is_active',
     ];
 
     protected $casts = [
         'company_group_id' => 'integer',
         'parent_company_id' => 'integer',
+        'default_attendance_policy_id' => 'integer',
+        'default_shift_pattern_id' => 'integer',
         'is_legal_entity' => 'boolean',
         'is_active' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $company): void {
+            if (filled($company->default_attendance_policy_id)) {
+                $policyCompanyId = AttendancePolicy::query()
+                    ->whereKey($company->default_attendance_policy_id)
+                    ->value('company_id');
+
+                if (! filled($policyCompanyId) || (filled($company->id) && (int) $policyCompanyId !== (int) $company->id)) {
+                    throw ValidationException::withMessages([
+                        'default_attendance_policy_id' => 'The default attendance policy must belong to the same company.',
+                    ]);
+                }
+            }
+
+            if (filled($company->default_shift_pattern_id)) {
+                $shiftPatternCompanyId = ShiftPattern::query()
+                    ->whereKey($company->default_shift_pattern_id)
+                    ->value('company_id');
+
+                if (! filled($shiftPatternCompanyId) || (filled($company->id) && (int) $shiftPatternCompanyId !== (int) $company->id)) {
+                    throw ValidationException::withMessages([
+                        'default_shift_pattern_id' => 'The default shift pattern must belong to the same company.',
+                    ]);
+                }
+            }
+        });
+    }
 
     public static function defaultAttributes(): array
     {
@@ -91,6 +125,36 @@ class Company extends Model
     public function workLocations(): HasMany
     {
         return $this->hasMany(WorkLocation::class);
+    }
+
+    public function attendancePolicies(): HasMany
+    {
+        return $this->hasMany(AttendancePolicy::class);
+    }
+
+    public function defaultAttendancePolicy(): BelongsTo
+    {
+        return $this->belongsTo(AttendancePolicy::class, 'default_attendance_policy_id');
+    }
+
+    public function shiftPatterns(): HasMany
+    {
+        return $this->hasMany(ShiftPattern::class);
+    }
+
+    public function defaultShiftPattern(): BelongsTo
+    {
+        return $this->belongsTo(ShiftPattern::class, 'default_shift_pattern_id');
+    }
+
+    public function shiftAssignments(): HasMany
+    {
+        return $this->hasMany(ShiftAssignment::class);
+    }
+
+    public function employeeSchedules(): HasMany
+    {
+        return $this->hasMany(EmployeeSchedule::class);
     }
 
     public function costCenters(): HasMany

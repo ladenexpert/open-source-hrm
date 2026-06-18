@@ -145,11 +145,20 @@ Approval governance scope filters centralized
 Company Admin vs Company Group Admin baseline introduced
 Portal self-scope preserved
 Approval inbox scope regression coverage added
+v1.4.0-attendance-foundation
+Phase 3 attendance foundation completed
+Attendance policy foundation
+Shift pattern and shift assignment foundation
+Employee schedule exception foundation
+GPS-ready work location schema
+Attendance resolver services
+Attendance admin resources
+Attendance foundation regression coverage added
 Repository State
 
 Current stable milestone:
 
-v1.3.5-stabilization-check
+v1.4.0-attendance-foundation
 
 Repository status expectations:
 
@@ -160,7 +169,7 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.3.5-stabilization-check
+v1.4.0-attendance-foundation
 
 ## License Hygiene Policy
 
@@ -444,29 +453,104 @@ php artisan optimize:clear - passed
 php artisan migrate:fresh --seed - passed
 php artisan test - passed (151 tests, 338 assertions)
 
+Attendance Foundation Completion
+
+Milestone candidate:
+v1.4.0-attendance-foundation
+
+Tables added:
+attendance_policies
+shift_patterns
+shift_pattern_details
+shift_assignments
+employee_schedules
+
+Schema updates:
+work_locations.latitude
+work_locations.longitude
+work_locations.radius_meters
+employees.attendance_policy_id
+employees.attendance_location_mode_override
+companies.default_attendance_policy_id
+companies.default_shift_pattern_id
+
+Models added:
+AttendancePolicy
+ShiftPattern
+ShiftPatternDetail
+ShiftAssignment
+EmployeeSchedule
+
+Services added:
+AttendancePolicyResolverService
+ShiftResolverService
+ShiftResolutionResult
+
+Resources added:
+AttendancePolicyResource
+ShiftPatternResource
+ShiftAssignmentResource
+
+Seeders added:
+AttendanceFoundationSeeder
+
+Tests added:
+AttendanceFoundationV140Test
+
+Phase 3 ADR baseline:
+ADR-1 Employee override > Department > Branch > Company default shift priority is locked.
+ADR-2 Employee override > AttendancePolicy > fixed location-mode resolution is locked.
+ADR-3 Overnight shifts are supported when end time crosses or equals start time on the next day.
+ADR-4 Work locations are now GPS-ready through nullable latitude, longitude, and radius_meters columns.
+ADR-5 Fixed, flexible, and scheduled location strategies are preserved for later logging and validation sprints.
+ADR-6 Office and manufacturing deployments share the same configurable attendance schema.
+ADR-7 Attendance policy resolution order is employee policy > company default policy > null.
+ADR-8 WorkdayPattern and ShiftPattern remain separate concerns.
+ADR-9 Shift assignments remain period-based and are not materialized per employee per day.
+ADR-10 Companies can maintain multiple attendance policies.
+ADR-11 ShiftPatternDetail stores per-day working rules and hours.
+ADR-12 EmployeeSchedule is exception-only and does not replace assignment-based scheduling.
+
+Day of week convention:
+Attendance foundation follows the repository's existing WorkdayPatternDay convention of 1=Monday through 7=Sunday.
+
+Implementation notes:
+Employee->department() uses department_id and Employee->branch() uses branch_id for the shift cascade.
+Shift assignment overlap validation is enforced at the model layer and surfaced as validation errors before persistence.
+Shift resolution returns null when no schedule, assignment, or company default applies; that null case is intentionally deferred to attendance logging behavior in v1.4.1.
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize:clear - passed
+php artisan migrate:fresh --seed - passed
+php artisan test - passed (178 tests, 386 assertions)
+
 License audit:
 Clean
 All packages verified as MIT / Apache / BSD / ISC compatible for commercial SaaS use.
 nette/* remains the only noted dual-licensed exception and is used under BSD-3-Clause terms as a development-only dependency.
 
 Schema deferral:
-work_locations does not yet contain latitude, longitude, or radius_meters.
-GPS columns are deferred to v1.4.0-attendance-foundation.
+work_locations now contains latitude, longitude, and radius_meters.
+GPS-ready attendance location support is available for Phase 3 attendance work.
 
 Phase transition confirmation:
 Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
-Phase 3 Attendance Enterprise is confirmed next, starting with v1.4.0-attendance-foundation.
+Phase 3 Attendance Enterprise is now active and starts from the completed v1.4.0-attendance-foundation baseline.
 
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
 Shared group-scoped HR master data remains intentionally available to same-group HR master-data managers.
 Approval workflow business rules were not rewritten; this sprint only hardened reusable access-scope boundaries and role detection.
+Shift resolution intentionally returns null when no employee schedule, assignment, or company default applies; v1.4.1 attendance logging will decide how to surface or enforce that gap.
+WorkdayPatternDay uses the existing 1=Monday through 7=Sunday convention, so shift_pattern_details matches that internal convention instead of the originally proposed 0=Sunday through 6=Saturday format.
 
 Next planned phase:
-Phase 3 - Attendance Enterprise (starts with v1.4.0-attendance-foundation)
+Phase 3 - Attendance Enterprise (v1.4.1 Attendance Log is next)
 
 Next Sprint
-v1.4.0-attendance-foundation
+v1.4.1-attendance-log
 
 Roadmap Update
 
@@ -479,7 +563,7 @@ v1.3.4 Access Scope Hardening
 v1.3.5 Stabilization Check
 
 Next Phase
-v1.4.0 Attendance Foundation
+v1.4.1 Attendance Log
 
 Sprint 4 prerequisites already completed:
 

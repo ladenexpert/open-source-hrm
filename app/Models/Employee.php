@@ -7,10 +7,11 @@ use App\Models\Concerns\BelongsToCompany;
 use Database\Factories\EmployeeFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -96,6 +97,8 @@ class Employee extends Authenticatable implements FilamentUser
         'assignment_end_date',
         'payroll_scheme',
         'tax_residency_status',
+        'attendance_policy_id',
+        'attendance_location_mode_override',
         'bpjs_eligible',
         'thr_eligible',
         'is_active',
@@ -128,6 +131,7 @@ class Employee extends Authenticatable implements FilamentUser
             $employee->validateOrganizationStructure();
             $employee->validateEmploymentDates();
             $employee->validateExpatriateProfile();
+            $employee->validateAttendanceConfiguration();
         });
     }
 
@@ -364,6 +368,11 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->belongsTo(WorkLocation::class);
     }
 
+    public function attendancePolicy(): BelongsTo
+    {
+        return $this->belongsTo(AttendancePolicy::class);
+    }
+
     public function costCenter(): BelongsTo
     {
         return $this->belongsTo(CostCenter::class);
@@ -439,6 +448,16 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->hasMany(LeaveEntitlement::class);
     }
 
+    public function shiftAssignments(): MorphMany
+    {
+        return $this->morphMany(ShiftAssignment::class, 'assignable');
+    }
+
+    public function employeeSchedules(): HasMany
+    {
+        return $this->hasMany(EmployeeSchedule::class);
+    }
+
     public function leaveTransactions(): HasMany
     {
         return $this->hasMany(LeaveTransaction::class);
@@ -501,6 +520,7 @@ class Employee extends Authenticatable implements FilamentUser
             'passport_expiry_date' => 'date',
             'assignment_start_date' => 'date',
             'assignment_end_date' => 'date',
+            'attendance_policy_id' => 'integer',
             'bpjs_eligible' => 'boolean',
             'thr_eligible' => 'boolean',
             'is_active' => 'boolean',
@@ -780,6 +800,25 @@ class Employee extends Authenticatable implements FilamentUser
         if (! $record || ! $record->isAvailableFor($companyId, $companyGroupId)) {
             throw ValidationException::withMessages([
                 $field => 'The selected value is outside the allowed company or company group scope.',
+            ]);
+        }
+    }
+
+    private function validateAttendanceConfiguration(): void
+    {
+        if (filled($this->attendance_policy_id)) {
+            $policyCompanyId = AttendancePolicy::query()->whereKey($this->attendance_policy_id)->value('company_id');
+
+            if (! filled($policyCompanyId) || (int) $policyCompanyId !== (int) $this->getEffectiveCompanyId()) {
+                throw ValidationException::withMessages([
+                    'attendance_policy_id' => 'The selected attendance policy must belong to the selected company.',
+                ]);
+            }
+        }
+
+        if (filled($this->attendance_location_mode_override) && ! in_array($this->attendance_location_mode_override, AttendancePolicy::locationModeOptions(), true)) {
+            throw ValidationException::withMessages([
+                'attendance_location_mode_override' => 'The selected attendance location mode override is invalid.',
             ]);
         }
     }

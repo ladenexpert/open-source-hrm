@@ -18,6 +18,9 @@ class WorkLocation extends Model
         'code',
         'name',
         'address',
+        'latitude',
+        'longitude',
+        'radius_meters',
         'is_active',
     ];
 
@@ -25,6 +28,9 @@ class WorkLocation extends Model
         'company_id' => 'integer',
         'is_active' => 'boolean',
         'branch_id' => 'integer',
+        'latitude' => 'decimal:7',
+        'longitude' => 'decimal:7',
+        'radius_meters' => 'integer',
     ];
 
     protected static function booted(): void
@@ -61,5 +67,15 @@ class WorkLocation extends Model
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class);
+    }
+
+    public function shiftAssignments(): HasMany
+    {
+        return $this->hasMany(ShiftAssignment::class);
+    }
+
+    public function employeeSchedules(): HasMany
+    {
+        return $this->hasMany(EmployeeSchedule::class);
     }
 }
