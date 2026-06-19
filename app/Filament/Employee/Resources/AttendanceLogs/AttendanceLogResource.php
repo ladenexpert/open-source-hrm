@@ -20,7 +20,7 @@ class AttendanceLogResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Work space';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $modelLabel = 'My Attendance Log';
 
@@ -75,6 +75,7 @@ class AttendanceLogResource extends Resource
         }
 
         return $query
+            ->forCompany($user->getEffectiveCompanyId())
             ->forEmployee($user)
             ->forDate(now(config('app.timezone'))->toDateString());
     }

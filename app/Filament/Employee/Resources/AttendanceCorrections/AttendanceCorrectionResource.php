@@ -5,6 +5,7 @@ namespace App\Filament\Employee\Resources\AttendanceCorrections;
 use App\Filament\Employee\Resources\AttendanceCorrections\Pages\CreateAttendanceCorrection;
 use App\Filament\Employee\Resources\AttendanceCorrections\Pages\ListAttendanceCorrections;
 use App\Filament\Employee\Resources\AttendanceCorrections\Pages\ViewAttendanceCorrection;
+use App\Models\AttendanceSummary;
 use App\Filament\Resources\Attendance\AttendanceCorrectionResource\Schemas\AttendanceCorrectionInfolist;
 use App\Models\AttendanceCorrection;
 use App\Models\Employee;
@@ -36,7 +37,7 @@ class AttendanceCorrectionResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'Work space';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $modelLabel = 'My Attendance Correction';
 
@@ -141,7 +142,9 @@ class AttendanceCorrectionResource extends Resource
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->forEmployee($user);
+        return $query
+            ->forCompany($user->getEffectiveCompanyId())
+            ->forEmployee($user);
     }
 
     public static function canAccess(): bool
@@ -157,6 +160,26 @@ class AttendanceCorrectionResource extends Resource
             'create' => CreateAttendanceCorrection::route('/create'),
             'view' => ViewAttendanceCorrection::route('/{record}'),
         ];
+    }
+
+    public static function getCreateUrlForSummary(?AttendanceSummary $summary = null, ?string $attendanceDate = null): string
+    {
+        $query = [];
+
+        if ($summary instanceof AttendanceSummary) {
+            $query['attendance_summary'] = $summary->getKey();
+            $query['attendance_date'] = $summary->attendance_date?->toDateString();
+        } elseif (filled($attendanceDate)) {
+            $query['attendance_date'] = $attendanceDate;
+        }
+
+        $url = static::getUrl('create', panel: 'portal');
+
+        if ($query === []) {
+            return $url;
+        }
+
+        return $url.'?'.http_build_query(array_filter($query, fn (mixed $value): bool => filled($value)));
     }
 
     public static function workLocationOptions(): array
