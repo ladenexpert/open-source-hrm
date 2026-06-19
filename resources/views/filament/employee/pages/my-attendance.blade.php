@@ -1,6 +1,7 @@
 @php
     $todaySummary = $this->getTodaySummary();
     $recentSummaries = $this->getRecentSummaries();
+    $pendingCorrectionCount = $this->getPendingCorrectionCount();
 @endphp
 
 <x-filament-panels::page>
@@ -11,23 +12,78 @@
             </x-slot>
 
             <x-slot name="description">
-                View today's attendance result and jump straight into your attendance history or correction workflow.
+                View today's attendance result and jump straight into your attendance history, clock log, or correction workflow.
             </x-slot>
 
             @if ($todaySummary)
+                <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-sm text-gray-500">Today Status Card</p>
+                                <div class="mt-2 flex flex-wrap items-center gap-3">
+                                    <span class="inline-flex rounded-full px-3 py-1 text-sm font-medium ring-1 ring-inset {{ $this->getStatusBadgeClasses($todaySummary->status) }}">
+                                        {{ $this->getStatusLabel($todaySummary->status) }}
+                                    </span>
+
+                                    @if (($todaySummary->late_minutes ?? 0) > 0)
+                                        <span class="inline-flex rounded-full bg-warning-50 px-3 py-1 text-sm font-medium text-warning-700 ring-1 ring-inset ring-warning-600/20">
+                                            Late Badge: {{ $todaySummary->late_minutes }} min
+                                        </span>
+                                    @endif
+
+                                    @if (($todaySummary->early_out_minutes ?? 0) > 0)
+                                        <span class="inline-flex rounded-full bg-warning-50 px-3 py-1 text-sm font-medium text-warning-700 ring-1 ring-inset ring-warning-600/20">
+                                            Early Leave Badge: {{ $todaySummary->early_out_minutes }} min
+                                        </span>
+                                    @endif
+
+                                    @if ($pendingCorrectionCount > 0)
+                                        <span class="inline-flex rounded-full bg-info-50 px-3 py-1 text-sm font-medium text-info-700 ring-1 ring-inset ring-info-600/20">
+                                            Pending Correction Badge: {{ $pendingCorrectionCount }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <div>
+                                    <p class="text-sm text-gray-500">Attendance Date</p>
+                                    <p class="mt-1 text-base font-semibold text-gray-950">{{ $todaySummary->attendance_date->toFormattedDateString() }}</p>
+                                </div>
+
+                                <div>
+                                    <p class="text-sm text-gray-500">Scheduled Work Window</p>
+                                    <p class="mt-1 text-base font-semibold text-gray-950">
+                                        {{ $todaySummary->scheduled_start_at?->format('H:i') ?? '-' }}
+                                        -
+                                        {{ $todaySummary->scheduled_end_at?->format('H:i') ?? '-' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3">
+                            <x-filament::button :href="$this->getAttendanceLogUrl()" tag="a" icon="heroicon-o-clock">
+                                Open Attendance Log
+                            </x-filament::button>
+
+                            <x-filament::button :href="$this->getHistoryUrl()" tag="a" color="gray" icon="heroicon-o-calendar-days">
+                                View History
+                            </x-filament::button>
+
+                            <x-filament::button :href="$this->getCorrectionsUrl()" tag="a" color="gray" icon="heroicon-o-document-text">
+                                My Corrections
+                            </x-filament::button>
+
+                            <x-filament::button :href="$this->getCorrectionCreateUrl($todaySummary)" tag="a" color="gray" icon="heroicon-o-pencil-square">
+                                Request Correction
+                            </x-filament::button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                        <p class="text-sm text-gray-500">Attendance Date</p>
-                        <p class="mt-2 text-lg font-semibold text-gray-950">{{ $todaySummary->attendance_date->toFormattedDateString() }}</p>
-                    </div>
-
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                        <p class="text-sm text-gray-500">Status</p>
-                        <span class="mt-2 inline-flex rounded-full px-3 py-1 text-sm font-medium ring-1 ring-inset {{ $this->getStatusBadgeClasses($todaySummary->status) }}">
-                            {{ $this->getStatusLabel($todaySummary->status) }}
-                        </span>
-                    </div>
-
                     <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                         <p class="text-sm text-gray-500">Actual Clock In</p>
                         <p class="mt-2 text-lg font-semibold text-gray-950">{{ $todaySummary->actual_in_at?->format('H:i') ?? '-' }}</p>
@@ -57,50 +113,45 @@
                         <p class="text-sm text-gray-500">Shift</p>
                         <p class="mt-2 text-lg font-semibold text-gray-950">{{ $todaySummary->shiftPattern?->name ?? '-' }}</p>
                     </div>
-                </div>
-
-                <div class="mt-4 grid gap-4 lg:grid-cols-2">
-                    <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                        <p class="text-sm text-gray-500">Scheduled Work Window</p>
-                        <p class="mt-2 text-base font-medium text-gray-950">
-                            {{ $todaySummary->scheduled_start_at?->format('H:i') ?? '-' }}
-                            -
-                            {{ $todaySummary->scheduled_end_at?->format('H:i') ?? '-' }}
-                        </p>
-                    </div>
-
                     <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                         <p class="text-sm text-gray-500">Work Location</p>
                         <p class="mt-2 text-base font-medium text-gray-950">{{ $todaySummary->workLocation?->name ?? '-' }}</p>
                     </div>
                 </div>
-
-                <div class="mt-4 flex flex-wrap gap-3">
-                    <x-filament::button :href="$this->getCorrectionCreateUrl($todaySummary)" tag="a" icon="heroicon-o-pencil-square">
-                        Request Correction
-                    </x-filament::button>
-
-                    <x-filament::button :href="$this->getHistoryUrl()" tag="a" color="gray" icon="heroicon-o-clock">
-                        View History
-                    </x-filament::button>
-
-                    <x-filament::button :href="$this->getCorrectionsUrl()" tag="a" color="gray" icon="heroicon-o-document-text">
-                        My Corrections
-                    </x-filament::button>
-                </div>
             @else
-                <div class="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-sm text-gray-600">
-                    No attendance summary is available for today yet.
-                </div>
+                <div class="rounded-2xl border border-dashed border-gray-300 bg-white p-6 shadow-sm">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-sm text-gray-500">Today Status Card</p>
+                                <p class="mt-2 text-base text-gray-700">No attendance summary is available for today yet.</p>
+                            </div>
 
-                <div class="mt-4 flex flex-wrap gap-3">
-                    <x-filament::button :href="$this->getHistoryUrl()" tag="a" color="gray" icon="heroicon-o-clock">
-                        View History
-                    </x-filament::button>
+                            @if ($pendingCorrectionCount > 0)
+                                <span class="inline-flex rounded-full bg-info-50 px-3 py-1 text-sm font-medium text-info-700 ring-1 ring-inset ring-info-600/20">
+                                    Pending Correction Badge: {{ $pendingCorrectionCount }}
+                                </span>
+                            @endif
+                        </div>
 
-                    <x-filament::button :href="$this->getCorrectionCreateUrl()" tag="a" color="gray" icon="heroicon-o-pencil-square">
-                        Request Correction
-                    </x-filament::button>
+                        <div class="flex flex-wrap gap-3">
+                            <x-filament::button :href="$this->getAttendanceLogUrl()" tag="a" icon="heroicon-o-clock">
+                                Open Attendance Log
+                            </x-filament::button>
+
+                            <x-filament::button :href="$this->getHistoryUrl()" tag="a" color="gray" icon="heroicon-o-calendar-days">
+                                View History
+                            </x-filament::button>
+
+                            <x-filament::button :href="$this->getCorrectionsUrl()" tag="a" color="gray" icon="heroicon-o-document-text">
+                                My Corrections
+                            </x-filament::button>
+
+                            <x-filament::button :href="$this->getCorrectionCreateUrl()" tag="a" color="gray" icon="heroicon-o-pencil-square">
+                                Request Correction
+                            </x-filament::button>
+                        </div>
+                    </div>
                 </div>
             @endif
         </x-filament::section>

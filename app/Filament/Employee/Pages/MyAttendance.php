@@ -3,10 +3,13 @@
 namespace App\Filament\Employee\Pages;
 
 use App\Filament\Employee\Resources\AttendanceCorrections\AttendanceCorrectionResource;
+use App\Filament\Employee\Resources\AttendanceLogs\AttendanceLogResource;
 use App\Filament\Employee\Resources\AttendanceSummaries\AttendanceSummaryResource;
+use App\Models\AttendanceCorrection;
 use App\Models\AttendanceSummary;
 use App\Models\Employee;
 use Filament\Pages\Page;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -41,9 +44,7 @@ class MyAttendance extends Page
         }
 
         return AttendanceSummary::query()
-            ->with(['shiftPattern', 'workLocation'])
-            ->forCompany($employee->getEffectiveCompanyId())
-            ->forEmployee($employee)
+            ->tap(fn (Builder $query) => $this->applyAttendanceSummaryScope($query, $employee))
             ->forDate(now(config('app.timezone'))->toDateString())
             ->first();
     }
@@ -60,9 +61,7 @@ class MyAttendance extends Page
         }
 
         return AttendanceSummary::query()
-            ->with(['shiftPattern', 'workLocation'])
-            ->forCompany($employee->getEffectiveCompanyId())
-            ->forEmployee($employee)
+            ->tap(fn (Builder $query) => $this->applyAttendanceSummaryScope($query, $employee))
             ->betweenDates(
                 now(config('app.timezone'))->copy()->subDays(6)->toDateString(),
                 now(config('app.timezone'))->toDateString(),
@@ -79,6 +78,11 @@ class MyAttendance extends Page
     public function getCorrectionsUrl(): string
     {
         return AttendanceCorrectionResource::getUrl(panel: 'portal');
+    }
+
+    public function getAttendanceLogUrl(): string
+    {
+        return AttendanceLogResource::getUrl(panel: 'portal');
     }
 
     public function getCorrectionCreateUrl(?AttendanceSummary $summary = null): string
@@ -108,5 +112,31 @@ class MyAttendance extends Page
             AttendanceSummary::STATUS_NO_SCHEDULE => 'bg-primary-50 text-primary-700 ring-primary-600/20',
             default => 'bg-gray-100 text-gray-700 ring-gray-500/20',
         };
+    }
+
+    public function getPendingCorrectionCount(): int
+    {
+        $employee = Auth::user();
+
+        if (! $employee instanceof Employee) {
+            return 0;
+        }
+
+        return AttendanceCorrection::query()
+            ->forCompany($employee->getEffectiveCompanyId())
+            ->forEmployee($employee)
+            ->status(AttendanceCorrection::STATUS_PENDING)
+            ->count();
+    }
+
+    private function applyAttendanceSummaryScope(Builder $query, Employee $employee): Builder
+    {
+        return $query
+            ->with([
+                'shiftPattern:id,name',
+                'workLocation:id,name',
+            ])
+            ->forCompany($employee->getEffectiveCompanyId())
+            ->forEmployee($employee);
     }
 }

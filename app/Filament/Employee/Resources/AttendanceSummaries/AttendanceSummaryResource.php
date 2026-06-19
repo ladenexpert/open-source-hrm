@@ -8,11 +8,12 @@ use App\Models\AttendanceSummary;
 use App\Models\Employee;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -44,9 +45,10 @@ class AttendanceSummaryResource extends Resource
                 TextColumn::make('attendance_date')->date()->sortable(),
                 TextColumn::make('status')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => AttendanceSummary::statusLabels()[$state] ?? $state),
-                TextColumn::make('actual_in_at')->dateTime()->toggleable(),
-                TextColumn::make('actual_out_at')->dateTime()->toggleable(),
+                    ->formatStateUsing(fn (string $state): string => AttendanceSummary::statusLabels()[$state] ?? $state)
+                    ->color(fn (string $state): string => AttendanceSummary::statusColor($state)),
+                TextColumn::make('actual_in_at')->dateTime('H:i')->toggleable(),
+                TextColumn::make('actual_out_at')->dateTime('H:i')->toggleable(),
                 TextColumn::make('late_minutes')->sortable(),
                 TextColumn::make('early_out_minutes')->sortable(),
                 TextColumn::make('work_minutes')->sortable(),
@@ -63,7 +65,33 @@ class AttendanceSummaryResource extends Resource
                     ->color(fn (bool $state): string => $state ? 'success' : 'warning'),
             ])
             ->filters([
+                Filter::make('period')
+                    ->schema([
+                        Select::make('value')
+                            ->label('Period')
+                            ->options([
+                                'this_month' => 'This Month',
+                                'last_month' => 'Last Month',
+                            ])
+                            ->placeholder('All Time'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $timezone = config('app.timezone');
+
+                        return match ($data['value'] ?? null) {
+                            'this_month' => $query->whereBetween('attendance_date', [
+                                now($timezone)->startOfMonth()->toDateString(),
+                                now($timezone)->endOfMonth()->toDateString(),
+                            ]),
+                            'last_month' => $query->whereBetween('attendance_date', [
+                                now($timezone)->subMonthNoOverflow()->startOfMonth()->toDateString(),
+                                now($timezone)->subMonthNoOverflow()->endOfMonth()->toDateString(),
+                            ]),
+                            default => $query,
+                        };
+                    }),
                 Filter::make('attendance_date')
+                    ->label('Custom Date Range')
                     ->schema([
                         DatePicker::make('from')->label('From'),
                         DatePicker::make('until')->label('Until'),
@@ -93,7 +121,10 @@ class AttendanceSummaryResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['shiftPattern', 'workLocation'])
+            ->with([
+                'shiftPattern:id,name',
+                'workLocation:id,name',
+            ])
             ->latest('attendance_date');
         $user = Auth::user();
 

@@ -82,7 +82,8 @@ class AttendanceSummaryResource extends Resource
                 TextColumn::make('attendance_date')->date()->sortable(),
                 TextColumn::make('status')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => AttendanceSummary::statusLabels()[$state] ?? $state),
+                    ->formatStateUsing(fn (string $state): string => AttendanceSummary::statusLabels()[$state] ?? $state)
+                    ->color(fn (string $state): string => AttendanceSummary::statusColor($state)),
                 TextColumn::make('scheduled_start_at')->dateTime()->toggleable(),
                 TextColumn::make('scheduled_end_at')->dateTime()->toggleable(),
                 TextColumn::make('actual_in_at')->dateTime()->toggleable(),

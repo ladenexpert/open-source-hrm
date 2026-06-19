@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Attendance\AttendanceCorrectionResource\Schemas
 
 use App\Models\ApprovalLog;
 use App\Models\AttendanceCorrection;
+use App\Models\AttendanceSummary;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
@@ -26,9 +27,13 @@ class AttendanceCorrectionInfolist
                             ->formatStateUsing(fn (string $state): string => AttendanceCorrection::correctionTypeLabels()[$state] ?? $state),
                         TextEntry::make('status')
                             ->badge()
-                            ->formatStateUsing(fn (string $state): string => AttendanceCorrection::statusLabels()[$state] ?? $state),
+                            ->formatStateUsing(fn (string $state): string => AttendanceCorrection::statusLabels()[$state] ?? $state)
+                            ->color(fn (string $state): string => AttendanceCorrection::statusColor($state)),
                         TextEntry::make('attendanceSummary.status')
                             ->label('Linked Summary Status')
+                            ->badge()
+                            ->formatStateUsing(fn (?string $state): string => AttendanceSummary::statusLabels()[$state] ?? ($state ?: '-'))
+                            ->color(fn (?string $state): string => AttendanceSummary::statusColor($state))
                             ->placeholder('-'),
                         TextEntry::make('requested_clock_in_at')->dateTime()->placeholder('-'),
                         TextEntry::make('requested_clock_out_at')->dateTime()->placeholder('-'),

@@ -12,6 +12,9 @@ use InvalidArgumentException;
 
 class AttendanceLogService
 {
+    private const CROSS_DATE_DUPLICATE_WINDOW_MINUTES = 120;
+    private const INVALID_REPEAT_WINDOW_MINUTES = 5;
+
     public function __construct(
         private readonly ShiftResolverService $shiftResolverService,
         private readonly AttendanceLocationValidationService $attendanceLocationValidationService,
@@ -44,6 +47,12 @@ class AttendanceLogService
             $latitude,
             $longitude,
             $workLocation,
+        );
+        $this->ensureNoDuplicateSubmission(
+            $employee,
+            $eventType,
+            $clockedAt,
+            (bool) $validation['is_valid'],
         );
 
         return AttendanceLog::query()->create([
@@ -83,6 +92,70 @@ class AttendanceLogService
         }
 
         return now($timezone);
+    }
+
+    private function ensureNoDuplicateSubmission(
+        Employee $employee,
+        string $eventType,
+        Carbon $clockedAt,
+        bool $currentAttemptIsValid,
+    ): void
+    {
+        $lastValidLog = AttendanceLog::query()
+            ->forCompany($employee->getEffectiveCompanyId())
+            ->forEmployee($employee)
+            ->where('event_type', $eventType)
+            ->valid()
+            ->where('clocked_at', '<=', $clockedAt)
+            ->orderByDesc('clocked_at')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($lastValidLog instanceof AttendanceLog) {
+            $isSameAttendanceDate = $lastValidLog->attendance_date?->toDateString() === $clockedAt->toDateString();
+            $isRapidRepeat = $lastValidLog->clocked_at?->diffInMinutes($clockedAt) <= self::CROSS_DATE_DUPLICATE_WINDOW_MINUTES;
+
+            if ($isSameAttendanceDate || $isRapidRepeat) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'event_type' => sprintf(
+                        '%s is already your latest valid attendance event at %s. Duplicate submissions are blocked.',
+                        AttendanceLog::eventTypeLabels()[$eventType] ?? $eventType,
+                        $lastValidLog->clocked_at?->setTimezone(config('app.timezone'))->format('d M Y H:i') ?? '-',
+                    ),
+                ]);
+            }
+        }
+
+        if ($currentAttemptIsValid) {
+            return;
+        }
+
+        $lastAttempt = AttendanceLog::query()
+            ->forCompany($employee->getEffectiveCompanyId())
+            ->forEmployee($employee)
+            ->where('event_type', $eventType)
+            ->where('clocked_at', '<=', $clockedAt)
+            ->orderByDesc('clocked_at')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $lastAttempt instanceof AttendanceLog || $lastAttempt->is_valid) {
+            return;
+        }
+
+        $isRapidInvalidRepeat = $lastAttempt->clocked_at?->diffInMinutes($clockedAt) <= self::INVALID_REPEAT_WINDOW_MINUTES;
+
+        if (! $isRapidInvalidRepeat) {
+            return;
+        }
+
+        throw \Illuminate\Validation\ValidationException::withMessages([
+            'event_type' => sprintf(
+                '%s attempt at %s was already recorded as invalid. Please wait before retrying and make sure GPS is available.',
+                AttendanceLog::eventTypeLabels()[$eventType] ?? $eventType,
+                $lastAttempt->clocked_at?->setTimezone(config('app.timezone'))->format('d M Y H:i') ?? '-',
+            ),
+        ]);
     }
 
     private function resolveSource(mixed $source): string

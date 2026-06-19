@@ -79,7 +79,8 @@ class AttendanceCorrectionResource extends Resource
                     ->formatStateUsing(fn (string $state): string => AttendanceCorrection::correctionTypeLabels()[$state] ?? $state),
                 TextColumn::make('status')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => AttendanceCorrection::statusLabels()[$state] ?? $state),
+                    ->formatStateUsing(fn (string $state): string => AttendanceCorrection::statusLabels()[$state] ?? $state)
+                    ->color(fn (string $state): string => AttendanceCorrection::statusColor($state)),
                 TextColumn::make('requested_clock_in_at')->dateTime()->toggleable(),
                 TextColumn::make('requested_clock_out_at')->dateTime()->toggleable(),
                 TextColumn::make('approved_clock_in_at')->dateTime()->toggleable(),
@@ -125,15 +126,9 @@ class AttendanceCorrectionResource extends Resource
     {
         $query = parent::getEloquentQuery()
             ->with([
-                'company',
-                'employee',
-                'attendanceSummary',
-                'requestedWorkLocation',
-                'approvedWorkLocation',
-                'approvalRequest.workflow.steps',
-                'approvalRequest.steps.approver',
-                'approvalRequest.steps.workflowStep',
-                'approvalRequest.logs.actor',
+                'attendanceSummary:id,employee_id,attendance_date,status',
+                'requestedWorkLocation:id,name',
+                'approvedWorkLocation:id,name',
             ])
             ->latest('attendance_date');
         $user = Auth::user();

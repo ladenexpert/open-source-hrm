@@ -146,6 +146,18 @@ class AttendanceCorrection extends Model
         ];
     }
 
+    public static function statusColor(?string $status): string
+    {
+        return match ($status) {
+            self::STATUS_DRAFT => 'gray',
+            self::STATUS_PENDING => 'warning',
+            self::STATUS_APPROVED => 'success',
+            self::STATUS_REJECTED => 'danger',
+            self::STATUS_CANCELLED => 'secondary',
+            default => 'gray',
+        };
+    }
+
     /**
      * @return array<int, string>
      */

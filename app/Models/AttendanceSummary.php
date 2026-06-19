@@ -150,6 +150,22 @@ class AttendanceSummary extends Model
         ];
     }
 
+    public static function statusColor(?string $status): string
+    {
+        return match ($status) {
+            self::STATUS_PRESENT => 'success',
+            self::STATUS_LATE,
+            self::STATUS_EARLY_OUT => 'warning',
+            self::STATUS_ABSENT => 'danger',
+            self::STATUS_LEAVE => 'info',
+            self::STATUS_HOLIDAY,
+            self::STATUS_WEEKEND,
+            self::STATUS_NO_SCHEDULE => 'primary',
+            self::STATUS_INCOMPLETE => 'gray',
+            default => 'gray',
+        };
+    }
+
     protected function resolveCompanyIdForCreation(): ?int
     {
         if (filled($this->employee_id)) {

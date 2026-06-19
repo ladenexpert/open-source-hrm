@@ -154,6 +154,17 @@ GPS-ready work location schema
 Attendance resolver services
 Attendance admin resources
 Attendance foundation regression coverage added
+v1.4.1-attendance-log
+Attendance log completed
+Attendance raw audit logging implemented
+Attendance location validation implemented
+Employee portal attendance clock capability implemented
+Invalid attendance attempts retained for audit
+v1.4.2-attendance-calculation
+Attendance calculation completed
+AttendanceSummary snapshot layer implemented
+Daily attendance calculation implemented
+Invalid logs ignored for actual attendance calculation
 v1.4.3-attendance-correction
 Attendance correction workflow completed
 AttendanceCorrection model implemented
@@ -173,11 +184,26 @@ Portal attendance correction entry point implemented
 Authenticated employee self-scope enforcement preserved
 Existing AttendanceCorrection workflow reused
 Cross-employee attendance access prevention validated
+v1.4.5-attendance-stabilization-ux-polish
+Attendance stabilization and UX polish completed
+Attendance dashboard UX polish implemented
+Today Status Card implemented
+Late and early leave badges implemented
+Pending correction badge implemented
+Quick attendance portal actions refined
+Attendance history period filters implemented
+Lightweight attendance summary metrics implemented
+Correction status visibility clarified
+Duplicate attendance log protection hardened
+Rapid repeated invalid attempt protection implemented
+First invalid GPS-required attempt retained as immutable audit evidence
+Valid retry after invalid GPS attempt allowed
+Portal performance optimizations validated
 Repository State
 
 Current stable milestone:
 
-v1.4.4-attendance-portal-enhancement
+v1.4.5-attendance-stabilization-ux-polish
 
 Repository status expectations:
 
@@ -188,11 +214,11 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.4.4-attendance-portal-enhancement
+v1.4.5-attendance-stabilization-ux-polish
 
 Current test baseline:
-267 tests
-646 assertions
+284 tests
+709 assertions
 No regressions
 
 ## License Hygiene Policy
@@ -702,6 +728,58 @@ php artisan optimize:clear - passed
 php artisan migrate:fresh --seed - passed
 php artisan test - passed (267 tests, 646 assertions)
 
+Attendance Stabilization & UX Polish Completion
+
+Milestone candidate:
+v1.4.5-attendance-stabilization-ux-polish
+
+Portal capabilities added:
+Attendance dashboard UX polish
+Today Status Card
+Late and early leave badges
+Pending correction badge
+Quick attendance portal actions
+Attendance history period filters:
+This Month
+Last Month
+Custom Date Range
+Lightweight attendance summary metrics:
+Present
+Late
+Absent
+Leave
+Clearer correction status visibility:
+Draft
+Pending
+Approved
+Rejected
+Duplicate attendance log protection
+Rapid repeated invalid attempt protection
+First invalid GPS-required attempt retained as immutable audit evidence
+Valid retry after invalid GPS attempt allowed
+Portal performance optimizations
+
+Architecture notes:
+AttendanceLog remains immutable raw audit source.
+AttendanceSummary remains calculated attendance output.
+AttendanceCorrection remains approval-based workflow.
+Attendance portal remains the presentation and self-service layer.
+Duplicate protection is centralized in AttendanceLogService.
+Invalid logs may still be stored as audit evidence.
+Invalid logs do not generate valid actual_in_at or actual_out_at summary values.
+Attendance history is based on AttendanceSummary, not raw AttendanceLog.
+Empty Attendance History is expected if no AttendanceSummary exists.
+GPS-required portal attempts remain invalid until browser or client GPS capture is implemented.
+v1.4.5 does not change GPS validation policy.
+v1.4.5 does not redesign attendance calculation, correction, leave, overtime, or payroll engines.
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize:clear - passed
+php artisan migrate:fresh --seed - passed
+php artisan test - passed (284 tests, 709 assertions)
+
 License audit:
 Clean
 All packages verified as MIT / Apache / BSD / ISC compatible for commercial SaaS use.
@@ -713,13 +791,14 @@ GPS-ready attendance location support is available for Phase 3 attendance work.
 
 Phase transition confirmation:
 Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
-Phase 3 Attendance Enterprise is active on the completed v1.4.4-attendance-portal-enhancement baseline.
+Phase 3 Attendance Enterprise is active on the completed v1.4.5-attendance-stabilization-ux-polish baseline.
 
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
 Shared group-scoped HR master data remains intentionally available to same-group HR master-data managers.
 Approval workflow business rules were not rewritten; this sprint only hardened reusable access-scope boundaries and role detection.
 Browser geolocation capture is not yet implemented in the portal UI, but the raw logging service supports GPS payloads.
+For GPS-required employees, portal clock attempts without GPS remain invalid by policy.
 Selfie upload is not yet implemented in the portal UI, but selfie_path is supported on the raw log model and service payload.
 Legacy Attendance remains in place for coexistence; raw enterprise attendance logging is implemented separately in AttendanceLog.
 Shift resolution intentionally returns null when no employee schedule, assignment, or company default applies; raw attendance logging stores that state without introducing calculation.
@@ -733,12 +812,21 @@ Bulk correction remains deferred.
 Monthly attendance lock remains deferred.
 
 Next planned phase:
-To be defined by repository owner following v1.4.4-attendance-portal-enhancement.
+To be defined by repository owner following v1.4.5-attendance-stabilization-ux-polish.
 
 Next Sprint
-To be defined by repository owner.
+Recommended future milestone:
+v1.4.6 Attendance Geo Capture Enhancement
 
 Roadmap Update
+
+Accepted stable baseline roadmap:
+[done] v1.4.0 Attendance Foundation
+[done] v1.4.1 Attendance Log
+[done] v1.4.2 Attendance Calculation
+[done] v1.4.3 Attendance Correction
+[done] v1.4.4 Attendance Portal Enhancement
+[done] v1.4.5 Attendance Stabilization & UX Polish
 
 Sprint 5 Attendance Enterprise
 ✅ v1.4.0 Attendance Foundation
@@ -746,6 +834,8 @@ Sprint 5 Attendance Enterprise
 ✅ v1.4.2 Attendance Calculation
 ✅ v1.4.3 Attendance Correction
 ✅ v1.4.4 Attendance Portal Enhancement
+
+v1.4.5 Attendance Stabilization & UX Polish
 
 Phase 2 Complete
 v1.3.0 Leave Foundation
@@ -759,7 +849,7 @@ Next Phase
 To be defined by repository owner
 
 Next Planned Milestone:
-To be defined by repository owner
+v1.4.6 Attendance Geo Capture Enhancement
 
 Sprint 4 prerequisites already completed:
 
