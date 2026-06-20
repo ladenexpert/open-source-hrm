@@ -28,6 +28,12 @@ class ViewAttendanceCorrection extends ViewRecord
                 ->icon('heroicon-o-check-circle')
                 ->color('success')
                 ->visible(fn (): bool => Auth::user() instanceof Employee && Gate::forUser(Auth::user())->allows('approve', $this->record))
+                ->fillForm(fn (): array => [
+                    'approved_clock_in_at' => $this->record->requested_clock_in_at,
+                    'approved_clock_out_at' => $this->record->requested_clock_out_at,
+                    'approved_work_location_id' => $this->record->requested_work_location_id,
+                    'approved_notes' => $this->record->requested_notes,
+                ])
                 ->schema([
                     DateTimePicker::make('approved_clock_in_at')->label('Approved Clock In')->seconds(false),
                     DateTimePicker::make('approved_clock_out_at')->label('Approved Clock Out')->seconds(false),
@@ -60,7 +66,7 @@ class ViewAttendanceCorrection extends ViewRecord
                         app(AttendanceCorrectionService::class)->approve($this->record, Auth::user(), $payload);
                     }
 
-                    $this->record->refresh();
+                    $this->refreshRecordState();
 
                     Notification::make()->title('Attendance correction approved.')->success()->send();
                 }),
@@ -83,7 +89,7 @@ class ViewAttendanceCorrection extends ViewRecord
                         app(AttendanceCorrectionService::class)->reject($this->record, Auth::user(), $data['comments'] ?? null);
                     }
 
-                    $this->record->refresh();
+                    $this->refreshRecordState();
 
                     Notification::make()->title('Attendance correction rejected.')->success()->send();
                 }),
@@ -94,7 +100,7 @@ class ViewAttendanceCorrection extends ViewRecord
                 ->requiresConfirmation()
                 ->action(function (): void {
                     app(AttendanceCorrectionService::class)->cancel($this->record, Auth::user());
-                    $this->record->refresh();
+                    $this->refreshRecordState();
 
                     Notification::make()->title('Attendance correction cancelled.')->success()->send();
                 }),
@@ -123,5 +129,10 @@ class ViewAttendanceCorrection extends ViewRecord
             'rejectedBy',
             'cancelledBy',
         ]);
+    }
+
+    private function refreshRecordState(): void
+    {
+        $this->record = $this->resolveRecord($this->record->getKey());
     }
 }

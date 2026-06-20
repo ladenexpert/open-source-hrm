@@ -471,7 +471,7 @@ class AttendanceCorrectionService
 
     private function resolveApprovedDateTime(array $payload, string $key, mixed $fallback): ?Carbon
     {
-        if (! array_key_exists($key, $payload)) {
+        if ((! array_key_exists($key, $payload)) || blank($payload[$key])) {
             return $fallback instanceof Carbon ? $fallback->copy() : $fallback;
         }
 
@@ -480,7 +480,7 @@ class AttendanceCorrectionService
 
     private function resolveApprovedInteger(array $payload, string $key, mixed $fallback): ?int
     {
-        if (! array_key_exists($key, $payload)) {
+        if ((! array_key_exists($key, $payload)) || blank($payload[$key])) {
             return filled($fallback) ? (int) $fallback : null;
         }
 
@@ -489,7 +489,7 @@ class AttendanceCorrectionService
 
     private function resolveApprovedString(array $payload, string $key, mixed $fallback): ?string
     {
-        if (! array_key_exists($key, $payload)) {
+        if ((! array_key_exists($key, $payload)) || blank($payload[$key])) {
             return filled($fallback) ? (string) $fallback : null;
         }
 

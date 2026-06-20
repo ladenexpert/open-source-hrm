@@ -199,11 +199,26 @@ Rapid repeated invalid attempt protection implemented
 First invalid GPS-required attempt retained as immutable audit evidence
 Valid retry after invalid GPS attempt allowed
 Portal performance optimizations validated
+v1.4.6-attendance-geo-capture-enhancement
+Attendance geo capture enhancement completed
+Browser GPS capture for employee portal Clock In / Clock Out implemented
+navigator.geolocation integration implemented
+Latitude and longitude submission to AttendanceLogService implemented
+GPS permission handling implemented for allowed, denied, timeout, unsupported, and unavailable cases
+Portal success feedback now appears only for valid logs
+Portal validation warning and error feedback preserved for invalid logs
+No misleading success message on failed or invalid attendance submissions
+WorkLocation GPS configuration UI exposed for latitude, longitude, and radius_meters
+Demo employee attendance-ready seed data implemented for employee@hrms.local
+Admin attendance correction approval modal prefilled from employee requested values
+Blank and null admin approval inputs fall back to requested values
+Approval view rerender relation loading stabilized
+Correction status visibility confirmed in admin and employee portal views
 Repository State
 
 Current stable milestone:
 
-v1.4.5-attendance-stabilization-ux-polish
+v1.4.6-attendance-geo-capture-enhancement
 
 Repository status expectations:
 
@@ -214,12 +229,15 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.4.5-attendance-stabilization-ux-polish
+v1.4.6-attendance-geo-capture-enhancement
 
 Current test baseline:
-284 tests
-709 assertions
-No regressions
+302 tests
+813 assertions
+No automated regressions detected
+
+Manual browser UAT status:
+Pending by repository owner for native geolocation permission dialog verification
 
 ## License Hygiene Policy
 
@@ -780,6 +798,62 @@ php artisan optimize:clear - passed
 php artisan migrate:fresh --seed - passed
 php artisan test - passed (284 tests, 709 assertions)
 
+Attendance Geo Capture Enhancement Completion
+
+Milestone candidate:
+v1.4.6-attendance-geo-capture-enhancement
+
+Portal capabilities added:
+Browser GPS capture for Clock In and Clock Out
+navigator.geolocation integration for employee portal attendance actions
+Latitude and longitude submission from portal UI into AttendanceLogService
+Native GPS permission and runtime handling for:
+allowed
+denied
+timeout
+unsupported
+unavailable
+Clear portal feedback behavior:
+Success only for valid logs
+Validation warning or error for invalid logs
+No misleading success message on failed or invalid submission
+
+Admin and configuration capabilities added:
+WorkLocation GPS configuration UI for latitude, longitude, and radius_meters
+Demo employee attendance-ready seed data for employee@hrms.local
+Attendance correction admin approval modal prefilled from employee requested values
+Blank or null admin approval inputs fall back to requested values
+Approval view rerender relation loading stabilized
+Correction status visibility confirmed in admin and employee portal list and view flows
+
+Architecture notes:
+AttendanceLog remains immutable raw audit source.
+AttendanceLocationValidationService remains the GPS and radius validation authority.
+AttendanceLogService remains the write path for raw attendance logs.
+AttendanceCalculationService still uses only valid logs for actual_in_at and actual_out_at.
+Invalid logs remain audit records and do not contribute to valid attendance summary output.
+Browser GPS capture does not bypass server-side GPS or radius validation.
+AttendanceCorrectionService remains the approval authority.
+Approval workflow is not bypassed.
+Existing WorkLocation fields are reused; no new GPS migration was introduced.
+
+Validation result:
+composer validate - passed
+composer install --dry-run - passed
+php artisan optimize:clear - passed
+php artisan migrate:fresh --seed - passed
+php artisan test - passed (302 tests, 813 assertions)
+
+Manual browser UAT status:
+Deferred intentionally by repository owner.
+Automated PHPUnit and Livewire coverage verifies server-side and event-dispatch integration paths.
+Manual browser UAT is still required to confirm:
+browser permission prompt appears
+GPS allow submits valid coordinates
+GPS deny shows correct error
+no browser console or runtime error occurs
+admin approval works from the real browser UI after rerender
+
 License audit:
 Clean
 All packages verified as MIT / Apache / BSD / ISC compatible for commercial SaaS use.
@@ -791,14 +865,14 @@ GPS-ready attendance location support is available for Phase 3 attendance work.
 
 Phase transition confirmation:
 Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
-Phase 3 Attendance Enterprise is active on the completed v1.4.5-attendance-stabilization-ux-polish baseline.
+Phase 3 Attendance Enterprise is active on the completed v1.4.6-attendance-geo-capture-enhancement baseline.
 
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
 Shared group-scoped HR master data remains intentionally available to same-group HR master-data managers.
 Approval workflow business rules were not rewritten; this sprint only hardened reusable access-scope boundaries and role detection.
-Browser geolocation capture is not yet implemented in the portal UI, but the raw logging service supports GPS payloads.
-For GPS-required employees, portal clock attempts without GPS remain invalid by policy.
+Browser geolocation capture is implemented in the portal UI for attendance Clock In and Clock Out.
+For GPS-required employees, attendance attempts without valid GPS remain invalid by policy.
 Selfie upload is not yet implemented in the portal UI, but selfie_path is supported on the raw log model and service payload.
 Legacy Attendance remains in place for coexistence; raw enterprise attendance logging is implemented separately in AttendanceLog.
 Shift resolution intentionally returns null when no employee schedule, assignment, or company default applies; raw attendance logging stores that state without introducing calculation.
@@ -812,11 +886,11 @@ Bulk correction remains deferred.
 Monthly attendance lock remains deferred.
 
 Next planned phase:
-To be defined by repository owner following v1.4.5-attendance-stabilization-ux-polish.
+Manual browser UAT closure or production hardening direction to be confirmed by repository owner following v1.4.6-attendance-geo-capture-enhancement.
 
 Next Sprint
 Recommended future milestone:
-v1.4.6 Attendance Geo Capture Enhancement
+v1.4.7 Attendance Browser UAT Closure & Production Hardening
 
 Roadmap Update
 
@@ -827,6 +901,7 @@ Accepted stable baseline roadmap:
 [done] v1.4.3 Attendance Correction
 [done] v1.4.4 Attendance Portal Enhancement
 [done] v1.4.5 Attendance Stabilization & UX Polish
+[done] v1.4.6 Attendance Geo Capture Enhancement
 
 Sprint 5 Attendance Enterprise
 ✅ v1.4.0 Attendance Foundation
@@ -834,8 +909,8 @@ Sprint 5 Attendance Enterprise
 ✅ v1.4.2 Attendance Calculation
 ✅ v1.4.3 Attendance Correction
 ✅ v1.4.4 Attendance Portal Enhancement
-
-v1.4.5 Attendance Stabilization & UX Polish
+✅ v1.4.5 Attendance Stabilization & UX Polish
+✅ v1.4.6 Attendance Geo Capture Enhancement
 
 Phase 2 Complete
 v1.3.0 Leave Foundation
@@ -846,10 +921,12 @@ v1.3.4 Access Scope Hardening
 v1.3.5 Stabilization Check
 
 Next Phase
-To be defined by repository owner
+v1.4.7 Attendance Browser UAT Closure & Production Hardening
+or
+v1.5.0 Payroll Enterprise Enhancement if manual browser UAT passes without issue
 
 Next Planned Milestone:
-v1.4.6 Attendance Geo Capture Enhancement
+v1.4.7 Attendance Browser UAT Closure & Production Hardening
 
 Sprint 4 prerequisites already completed:
 

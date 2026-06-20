@@ -82,12 +82,12 @@ class AttendanceLogV141Test extends TestCase
     {
         Filament::setCurrentPanel('portal');
 
-        $employee = $this->employee('andi.permanent@example.test');
+        $employee = $this->clockableEmployeeWithOfficePolicy();
 
         Livewire::actingAs($employee)
             ->test(PortalListAttendanceLogs::class)
-            ->callAction('clockIn')
-            ->assertNotified();
+            ->call('submitAttendanceEvent', 'clockIn', -6.2000000, 106.8166667)
+            ->assertNotified('Clock in recorded.');
 
         $log = AttendanceLog::query()->latest('id')->firstOrFail();
 
@@ -100,12 +100,12 @@ class AttendanceLogV141Test extends TestCase
     {
         Filament::setCurrentPanel('portal');
 
-        $employee = $this->employee('andi.permanent@example.test');
+        $employee = $this->clockableEmployeeWithOfficePolicy();
 
         Livewire::actingAs($employee)
             ->test(PortalListAttendanceLogs::class)
-            ->callAction('clockOut')
-            ->assertNotified();
+            ->call('submitAttendanceEvent', 'clockOut', -6.2000000, 106.8166667)
+            ->assertNotified('Clock out recorded.');
 
         $log = AttendanceLog::query()->latest('id')->firstOrFail();
 

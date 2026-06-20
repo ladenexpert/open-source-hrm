@@ -205,7 +205,7 @@ class AttendanceStabilizationV145Test extends TestCase
 
         Livewire::actingAs($employee)
             ->test(PortalListAttendanceLogs::class)
-            ->callAction('clockIn')
+            ->call('submitAttendanceEvent', 'clockIn')
             ->assertNotified();
 
         $this->assertSame(
@@ -236,7 +236,7 @@ class AttendanceStabilizationV145Test extends TestCase
 
         Livewire::actingAs($employee)
             ->test(PortalListAttendanceLogs::class)
-            ->callAction('clockOut')
+            ->call('submitAttendanceEvent', 'clockOut')
             ->assertNotified();
 
         $this->assertSame(

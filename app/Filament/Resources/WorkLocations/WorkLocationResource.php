@@ -65,6 +65,22 @@ class WorkLocationResource extends Resource
             TextInput::make('code')->required()->maxLength(50),
             TextInput::make('name')->required()->maxLength(255),
             Textarea::make('address')->columnSpanFull(),
+            TextInput::make('latitude')
+                ->label('Latitude')
+                ->numeric()
+                ->minValue(-90)
+                ->maxValue(90)
+                ->step('0.0000001'),
+            TextInput::make('longitude')
+                ->label('Longitude')
+                ->numeric()
+                ->minValue(-180)
+                ->maxValue(180)
+                ->step('0.0000001'),
+            TextInput::make('radius_meters')
+                ->label('Radius (Meters)')
+                ->numeric()
+                ->minValue(0),
             Toggle::make('is_active')->default(true),
         ]);
     }
@@ -76,6 +92,17 @@ class WorkLocationResource extends Resource
             TextColumn::make('branch.name')->label('Branch')->toggleable(),
             TextColumn::make('code')->searchable()->sortable(),
             TextColumn::make('name')->searchable()->sortable(),
+            TextColumn::make('latitude')
+                ->label('Latitude')
+                ->formatStateUsing(fn ($state): string => filled($state) ? number_format((float) $state, 7, '.', '') : '-')
+                ->toggleable(),
+            TextColumn::make('longitude')
+                ->label('Longitude')
+                ->formatStateUsing(fn ($state): string => filled($state) ? number_format((float) $state, 7, '.', '') : '-')
+                ->toggleable(),
+            TextColumn::make('radius_meters')
+                ->label('Radius (Meters)')
+                ->toggleable(),
             IconColumn::make('is_active')->boolean(),
         ]);
     }

@@ -126,6 +126,12 @@ class AttendanceCorrectionResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn (AttendanceCorrection $record): bool => Auth::user() instanceof Employee && Gate::forUser(Auth::user())->allows('approve', $record))
+                    ->fillForm(fn (AttendanceCorrection $record): array => [
+                        'approved_clock_in_at' => $record->requested_clock_in_at,
+                        'approved_clock_out_at' => $record->requested_clock_out_at,
+                        'approved_work_location_id' => $record->requested_work_location_id,
+                        'approved_notes' => $record->requested_notes,
+                    ])
                     ->schema([
                         DateTimePicker::make('approved_clock_in_at')->label('Approved Clock In')->seconds(false),
                         DateTimePicker::make('approved_clock_out_at')->label('Approved Clock Out')->seconds(false),

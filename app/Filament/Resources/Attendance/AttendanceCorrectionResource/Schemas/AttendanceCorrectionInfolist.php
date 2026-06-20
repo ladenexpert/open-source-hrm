@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Attendance\AttendanceCorrectionResource\Schemas;
 
 use App\Models\ApprovalLog;
+use App\Models\ApprovalWorkflowStep;
 use App\Models\AttendanceCorrection;
 use App\Models\AttendanceSummary;
+use App\Models\Employee;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
@@ -79,7 +81,21 @@ class AttendanceCorrectionInfolist
                                 $step = $approvalRequest->steps
                                     ->firstWhere('step_order', $approvalRequest->current_step_order);
 
-                                return $step?->workflowStep?->name ?? 'Step '.$approvalRequest->current_step_order;
+                                if (! $step) {
+                                    return 'Step '.$approvalRequest->current_step_order;
+                                }
+
+                                if ($step->relationLoaded('workflowStep')) {
+                                    return $step->workflowStep?->name ?? 'Step '.$approvalRequest->current_step_order;
+                                }
+
+                                if (filled($step->approval_workflow_step_id)) {
+                                    return ApprovalWorkflowStep::query()
+                                        ->whereKey($step->approval_workflow_step_id)
+                                        ->value('name') ?? 'Step '.$approvalRequest->current_step_order;
+                                }
+
+                                return 'Step '.$approvalRequest->current_step_order;
                             })
                             ->placeholder('-'),
                         TextEntry::make('approvalRequest.submitted_at')
@@ -93,7 +109,19 @@ class AttendanceCorrectionInfolist
                                     ?->filter(fn (ApprovalLog $log): bool => in_array($log->action, ['approved', 'rejected', 'fully_approved'], true))
                                     ->last();
 
-                                return $log?->actor?->full_name;
+                                if (! $log) {
+                                    return null;
+                                }
+
+                                if ($log->relationLoaded('actor')) {
+                                    return $log->actor?->full_name;
+                                }
+
+                                if (filled($log->actor_id)) {
+                                    return Employee::query()->whereKey($log->actor_id)->value('full_name');
+                                }
+
+                                return null;
                             })
                             ->placeholder('-'),
                     ]),
@@ -107,7 +135,20 @@ class AttendanceCorrectionInfolist
                             Grid::make(2)->schema([
                                 TextEntry::make('created_at')->label('Date')->dateTime(),
                                 TextEntry::make('action')->badge(),
-                                TextEntry::make('actor.full_name')->label('Actor')->placeholder('-'),
+                                TextEntry::make('actor_name')
+                                    ->label('Actor')
+                                    ->state(function (ApprovalLog $record): ?string {
+                                        if ($record->relationLoaded('actor')) {
+                                            return $record->actor?->full_name;
+                                        }
+
+                                        if (filled($record->actor_id)) {
+                                            return Employee::query()->whereKey($record->actor_id)->value('full_name');
+                                        }
+
+                                        return null;
+                                    })
+                                    ->placeholder('-'),
                                 TextEntry::make('comments')->placeholder('-'),
                             ]),
                         ]),

@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Enums\ApprovalModuleType;
 use App\Filament\Employee\Resources\AttendanceCorrections\AttendanceCorrectionResource as PortalAttendanceCorrectionResource;
 use App\Filament\Employee\Resources\AttendanceCorrections\Pages\ListAttendanceCorrections as PortalListAttendanceCorrections;
+use App\Filament\Employee\Resources\AttendanceCorrections\Pages\ViewAttendanceCorrection as PortalViewAttendanceCorrection;
 use App\Filament\Resources\Attendance\AttendanceCorrectionResource as AdminAttendanceCorrectionResource;
 use App\Filament\Resources\Attendance\AttendanceCorrectionResource\Pages\ListAttendanceCorrections as AdminListAttendanceCorrections;
+use App\Filament\Resources\Attendance\AttendanceCorrectionResource\Pages\ViewAttendanceCorrection as AdminViewAttendanceCorrection;
 use App\Models\ApprovalWorkflow;
 use App\Models\AttendanceCorrection;
 use App\Models\AttendanceLog;
@@ -212,6 +214,237 @@ class AttendanceCorrectionV143Test extends TestCase
             $approved->requested_clock_out_at?->toDateTimeString(),
             $approved->approved_clock_out_at?->toDateTimeString(),
         );
+    }
+
+    public function test_submitted_correction_persists_requested_values_for_approval(): void
+    {
+        [$employee] = $this->prepareApprovalScenario();
+        $date = $this->nextWeekday(Carbon::TUESDAY);
+        $requestedWorkLocation = $this->createWorkLocationForCompany($employee, 'Requested Location');
+        $submitted = $this->submitCorrectionDraft($employee, [
+            'attendance_date' => $date->toDateString(),
+            'correction_type' => AttendanceCorrection::TYPE_MANUAL_ADJUSTMENT,
+            'reason' => 'Need both requested times and location preserved.',
+            'requested_clock_in_at' => $date->copy()->setTime(8, 12)->toDateTimeString(),
+            'requested_clock_out_at' => $date->copy()->setTime(17, 18)->toDateTimeString(),
+            'requested_work_location_id' => $requestedWorkLocation->id,
+            'requested_notes' => 'Submitted requested attendance correction values.',
+        ]);
+
+        $submitted->refresh();
+
+        $this->assertSame('08:12:00', $submitted->requested_clock_in_at?->format('H:i:s'));
+        $this->assertSame('17:18:00', $submitted->requested_clock_out_at?->format('H:i:s'));
+        $this->assertSame($requestedWorkLocation->id, $submitted->requested_work_location_id);
+        $this->assertSame('Submitted requested attendance correction values.', $submitted->requested_notes);
+    }
+
+    public function test_admin_approval_action_form_prefills_requested_values(): void
+    {
+        Filament::setCurrentPanel('admin');
+
+        [$employee, $supervisor, $hrApprover] = $this->prepareApprovalScenario();
+        $date = $this->nextWeekday(Carbon::WEDNESDAY);
+        $requestedWorkLocation = $this->createWorkLocationForCompany($employee, 'Prefill Location');
+        $submitted = $this->submitCorrectionDraft($employee, [
+            'attendance_date' => $date->toDateString(),
+            'correction_type' => AttendanceCorrection::TYPE_MANUAL_ADJUSTMENT,
+            'reason' => 'Verify admin approval prefill.',
+            'requested_clock_in_at' => $date->copy()->setTime(8, 7)->toDateTimeString(),
+            'requested_clock_out_at' => $date->copy()->setTime(17, 9)->toDateTimeString(),
+            'requested_work_location_id' => $requestedWorkLocation->id,
+            'requested_notes' => 'Prefill requested values for HR approval.',
+        ]);
+
+        $this->attendanceCorrectionService->processApproval($submitted->approvalRequest, $supervisor, 'approved', 'Supervisor approved.');
+
+        Livewire::actingAs($hrApprover)
+            ->test(AdminViewAttendanceCorrection::class, ['record' => $submitted->id])
+            ->mountAction('approve')
+            ->assertActionDataSet(function (array $data) use ($submitted, $requestedWorkLocation): void {
+                $this->assertDateTimeStateMatches($submitted->requested_clock_in_at, $data['approved_clock_in_at'] ?? null);
+                $this->assertDateTimeStateMatches($submitted->requested_clock_out_at, $data['approved_clock_out_at'] ?? null);
+                $this->assertSame($requestedWorkLocation->id, (int) ($data['approved_work_location_id'] ?? 0));
+                $this->assertSame('Prefill requested values for HR approval.', $data['approved_notes'] ?? null);
+            });
+    }
+
+    public function test_admin_can_approve_without_reentering_requested_values(): void
+    {
+        Filament::setCurrentPanel('admin');
+
+        [$employee, $supervisor, $hrApprover] = $this->prepareApprovalScenario();
+        $date = $this->nextWeekday(Carbon::THURSDAY);
+        $requestedWorkLocation = $this->createWorkLocationForCompany($employee, 'Approve Without Reentry');
+        $submitted = $this->submitCorrectionDraft($employee, [
+            'attendance_date' => $date->toDateString(),
+            'correction_type' => AttendanceCorrection::TYPE_MANUAL_ADJUSTMENT,
+            'reason' => 'Approve using requested values already on the form.',
+            'requested_clock_in_at' => $date->copy()->setTime(8, 3)->toDateTimeString(),
+            'requested_clock_out_at' => $date->copy()->setTime(17, 11)->toDateTimeString(),
+            'requested_work_location_id' => $requestedWorkLocation->id,
+            'requested_notes' => 'Use requested values without retyping.',
+        ]);
+
+        $this->attendanceCorrectionService->processApproval($submitted->approvalRequest, $supervisor, 'approved', 'Supervisor approved.');
+
+        Livewire::actingAs($hrApprover)
+            ->test(AdminListAttendanceCorrections::class)
+            ->mountTableAction('approve', $submitted)
+            ->setTableActionData([
+                'comments' => 'HR approved without re-entering times.',
+            ])
+            ->callMountedTableAction();
+
+        $approved = $submitted->fresh();
+
+        $this->assertSame(AttendanceCorrection::STATUS_APPROVED, $approved->status);
+        $this->assertSame(
+            $approved->requested_clock_in_at?->toDateTimeString(),
+            $approved->approved_clock_in_at?->toDateTimeString(),
+        );
+        $this->assertSame(
+            $approved->requested_clock_out_at?->toDateTimeString(),
+            $approved->approved_clock_out_at?->toDateTimeString(),
+        );
+        $this->assertSame($approved->requested_work_location_id, $approved->approved_work_location_id);
+        $this->assertSame($approved->requested_notes, $approved->approved_notes);
+    }
+
+    public function test_admin_approval_blank_values_fall_back_to_requested_values(): void
+    {
+        Filament::setCurrentPanel('admin');
+
+        [$employee, $supervisor, $hrApprover] = $this->prepareApprovalScenario();
+        $date = $this->nextWeekday(Carbon::FRIDAY);
+        $requestedWorkLocation = $this->createWorkLocationForCompany($employee, 'Blank Fallback Location');
+        $submitted = $this->submitCorrectionDraft($employee, [
+            'attendance_date' => $date->toDateString(),
+            'correction_type' => AttendanceCorrection::TYPE_MANUAL_ADJUSTMENT,
+            'reason' => 'Blank values should still use requested correction values.',
+            'requested_clock_in_at' => $date->copy()->setTime(8, 14)->toDateTimeString(),
+            'requested_clock_out_at' => $date->copy()->setTime(17, 4)->toDateTimeString(),
+            'requested_work_location_id' => $requestedWorkLocation->id,
+            'requested_notes' => 'Keep these requested values when the form is blank.',
+        ]);
+
+        $this->attendanceCorrectionService->processApproval($submitted->approvalRequest, $supervisor, 'approved', 'Supervisor approved.');
+
+        Livewire::actingAs($hrApprover)
+            ->test(AdminListAttendanceCorrections::class)
+            ->mountTableAction('approve', $submitted)
+            ->setTableActionData([
+                'approved_clock_in_at' => null,
+                'approved_clock_out_at' => null,
+                'approved_work_location_id' => null,
+                'approved_notes' => null,
+                'comments' => 'HR approved relying on requested values.',
+            ])
+            ->callMountedTableAction();
+
+        $approved = $submitted->fresh();
+
+        $this->assertSame(AttendanceCorrection::STATUS_APPROVED, $approved->status);
+        $this->assertSame(
+            $approved->requested_clock_in_at?->toDateTimeString(),
+            $approved->approved_clock_in_at?->toDateTimeString(),
+        );
+        $this->assertSame(
+            $approved->requested_clock_out_at?->toDateTimeString(),
+            $approved->approved_clock_out_at?->toDateTimeString(),
+        );
+        $this->assertSame($approved->requested_work_location_id, $approved->approved_work_location_id);
+        $this->assertSame($approved->requested_notes, $approved->approved_notes);
+    }
+
+    public function test_admin_view_page_can_approve_pending_correction_and_shows_updated_status(): void
+    {
+        Filament::setCurrentPanel('admin');
+
+        [$employee, $supervisor, $hrApprover] = $this->prepareApprovalScenario();
+        $date = $this->nextWeekday(Carbon::MONDAY);
+        $submitted = $this->submitCorrectionDraft($employee, [
+            'attendance_date' => $date->toDateString(),
+            'correction_type' => AttendanceCorrection::TYPE_MANUAL_ADJUSTMENT,
+            'reason' => 'Approve from admin view page.',
+            'requested_clock_in_at' => $date->copy()->setTime(8, 1)->toDateTimeString(),
+            'requested_clock_out_at' => $date->copy()->setTime(17, 1)->toDateTimeString(),
+        ]);
+
+        $this->attendanceCorrectionService->processApproval($submitted->approvalRequest, $supervisor, 'approved', 'Supervisor approved.');
+
+        Livewire::actingAs($hrApprover)
+            ->test(AdminViewAttendanceCorrection::class, ['record' => $submitted->id])
+            ->assertSee('Pending')
+            ->mountAction('approve')
+            ->setActionData([
+                'comments' => 'HR approved from the view page.',
+            ])
+            ->callMountedAction()
+            ->assertSee('Approved');
+
+        $approved = $submitted->fresh();
+
+        $this->assertSame(AttendanceCorrection::STATUS_APPROVED, $approved->status);
+        $this->assertNotNull($approved->approved_at);
+    }
+
+    public function test_admin_list_and_portal_view_show_correction_status(): void
+    {
+        Filament::setCurrentPanel('admin');
+
+        [$employee, $supervisor, $hrApprover] = $this->prepareApprovalScenario();
+        $date = $this->nextWeekday(Carbon::TUESDAY);
+        $submitted = $this->submitCorrectionDraft($employee, [
+            'attendance_date' => $date->toDateString(),
+            'correction_type' => AttendanceCorrection::TYPE_MISSING_CLOCK_OUT,
+            'reason' => 'Status visibility regression test.',
+            'requested_clock_out_at' => $date->copy()->setTime(17, 0)->toDateTimeString(),
+        ]);
+
+        Livewire::actingAs($hrApprover)
+            ->test(AdminListAttendanceCorrections::class)
+            ->assertCanSeeTableRecords([$submitted])
+            ->assertTableColumnStateSet('status', AttendanceCorrection::STATUS_PENDING, $submitted);
+
+        $this->attendanceCorrectionService->processApproval($submitted->approvalRequest, $supervisor, 'approved', 'Supervisor approved.');
+        $this->attendanceCorrectionService->processApproval($submitted->fresh('approvalRequest')->approvalRequest, $hrApprover, 'approved', 'HR approved.');
+
+        Filament::setCurrentPanel('portal');
+
+        Livewire::actingAs($employee)
+            ->test(PortalListAttendanceCorrections::class)
+            ->assertCanSeeTableRecords([$submitted->fresh()])
+            ->assertTableColumnStateSet('status', AttendanceCorrection::STATUS_APPROVED, $submitted->fresh());
+
+        Livewire::actingAs($employee)
+            ->test(PortalViewAttendanceCorrection::class, ['record' => $submitted->id])
+            ->assertSee('Approved');
+    }
+
+    public function test_admin_approve_action_is_hidden_for_non_pending_records(): void
+    {
+        Filament::setCurrentPanel('admin');
+
+        [$employee, $supervisor, $hrApprover] = $this->prepareApprovalScenario();
+        $date = $this->nextWeekday(Carbon::WEDNESDAY);
+        $submitted = $this->submitCorrectionDraft($employee, [
+            'attendance_date' => $date->toDateString(),
+            'correction_type' => AttendanceCorrection::TYPE_MISSING_CLOCK_IN,
+            'reason' => 'Action visibility after completion.',
+            'requested_clock_in_at' => $date->copy()->setTime(8, 0)->toDateTimeString(),
+        ]);
+
+        $this->attendanceCorrectionService->processApproval($submitted->approvalRequest, $supervisor, 'approved', 'Supervisor approved.');
+        $this->attendanceCorrectionService->processApproval($submitted->fresh('approvalRequest')->approvalRequest, $hrApprover, 'approved', 'HR approved.');
+
+        Livewire::actingAs($hrApprover)
+            ->test(AdminListAttendanceCorrections::class)
+            ->assertTableActionHidden('approve', $submitted->fresh());
+
+        Livewire::actingAs($hrApprover)
+            ->test(AdminViewAttendanceCorrection::class, ['record' => $submitted->id])
+            ->assertActionHidden('approve');
     }
 
     public function test_approver_can_modify_approved_values(): void
@@ -835,6 +1068,20 @@ class AttendanceCorrectionV143Test extends TestCase
         ]);
     }
 
+    private function createWorkLocationForCompany(Employee $template, string $name): WorkLocation
+    {
+        $sequence = $this->workLocationSequence++;
+
+        return WorkLocation::query()->create([
+            'company_id' => $template->company_id,
+            'branch_id' => null,
+            'code' => sprintf('AC-WL-%03d', $sequence),
+            'name' => "{$name} {$sequence}",
+            'address' => 'Attendance correction test work location',
+            'is_active' => true,
+        ]);
+    }
+
     private function makeEmployeeFrom(Employee $template, array $overrides = []): Employee
     {
         $sequence = $this->employeeSequence++;
@@ -886,5 +1133,20 @@ class AttendanceCorrectionV143Test extends TestCase
     private function nextWeekday(int $dayConstant): Carbon
     {
         return now('Asia/Jakarta')->next($dayConstant)->startOfDay();
+    }
+
+    private function assertDateTimeStateMatches(?Carbon $expected, mixed $actual): void
+    {
+        if (! $expected instanceof Carbon) {
+            $this->assertNull($actual);
+
+            return;
+        }
+
+        $this->assertNotNull($actual);
+        $this->assertSame(
+            $expected->toDateTimeString(),
+            Carbon::parse($actual, config('app.timezone'))->toDateTimeString(),
+        );
     }
 }

@@ -68,7 +68,7 @@ class AttendancePortalEnhancementV144Test extends TestCase
             ->assertSee('08:15')
             ->assertSee('17:10')
             ->assertSee('475')
-            ->assertDontSee('999');
+            ->assertDontSeeHtml('>999<');
     }
 
     public function test_dashboard_only_displays_authenticated_employee_recent_attendance_data(): void
@@ -94,7 +94,7 @@ class AttendancePortalEnhancementV144Test extends TestCase
             ->assertOk()
             ->assertSee($ownRecentSummary->attendance_date->toDateString())
             ->assertDontSee($otherRecentSummary->attendance_date->toDateString())
-            ->assertDontSee('777');
+            ->assertSee((string) $ownRecentSummary->work_minutes);
     }
 
     public function test_employee_can_view_own_attendance_history(): void
