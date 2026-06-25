@@ -214,11 +214,24 @@ Admin attendance correction approval modal prefilled from employee requested val
 Blank and null admin approval inputs fall back to requested values
 Approval view rerender relation loading stabilized
 Correction status visibility confirmed in admin and employee portal views
+v1.4.7-attendance-selfie-verification
+Attendance selfie verification completed
+- Added attendance_selfies domain model and storage
+- Added configurable require_selfie setting on Attendance Policy (default false)
+- Selfie verification can be enabled or disabled per attendance policy
+- Clock In and Clock Out require selfie only when policy requires it
+- Existing GPS and radius validation behavior preserved
+- Added private/signed selfie access for admin review
+- Added AttendanceSelfieCaptureV147Test coverage
+Validation completed successfully with:
+- 309 tests passed
+- 851 assertions
+- Existing AttendanceGeoCaptureV146Test remained green
 Repository State
 
 Current stable milestone:
 
-v1.4.6-attendance-geo-capture-enhancement
+v1.4.7-attendance-selfie-verification
 
 Repository status expectations:
 
@@ -229,15 +242,15 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.4.6-attendance-geo-capture-enhancement
+v1.4.7-attendance-selfie-verification
 
 Current test baseline:
-302 tests
-813 assertions
+309 tests
+851 assertions
 No automated regressions detected
 
 Manual browser UAT status:
-Pending by repository owner for native geolocation permission dialog verification
+Completed and approved by project owner for v1.4.7-attendance-selfie-verification
 
 ## License Hygiene Policy
 
@@ -842,17 +855,11 @@ composer validate - passed
 composer install --dry-run - passed
 php artisan optimize:clear - passed
 php artisan migrate:fresh --seed - passed
-php artisan test - passed (302 tests, 813 assertions)
+php artisan test - passed (309 tests, 851 assertions)
 
 Manual browser UAT status:
-Deferred intentionally by repository owner.
+Completed successfully and approved by repository owner for the v1.4.7 stable milestone.
 Automated PHPUnit and Livewire coverage verifies server-side and event-dispatch integration paths.
-Manual browser UAT is still required to confirm:
-browser permission prompt appears
-GPS allow submits valid coordinates
-GPS deny shows correct error
-no browser console or runtime error occurs
-admin approval works from the real browser UI after rerender
 
 License audit:
 Clean
@@ -865,7 +872,7 @@ GPS-ready attendance location support is available for Phase 3 attendance work.
 
 Phase transition confirmation:
 Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
-Phase 3 Attendance Enterprise is active on the completed v1.4.6-attendance-geo-capture-enhancement baseline.
+Phase 3 Attendance Enterprise is active on the completed v1.4.7-attendance-selfie-verification baseline.
 
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
@@ -873,7 +880,7 @@ Shared group-scoped HR master data remains intentionally available to same-group
 Approval workflow business rules were not rewritten; this sprint only hardened reusable access-scope boundaries and role detection.
 Browser geolocation capture is implemented in the portal UI for attendance Clock In and Clock Out.
 For GPS-required employees, attendance attempts without valid GPS remain invalid by policy.
-Selfie upload is not yet implemented in the portal UI, but selfie_path is supported on the raw log model and service payload.
+Selfie verification is implemented in the portal UI and can be enabled or disabled per attendance policy.
 Legacy Attendance remains in place for coexistence; raw enterprise attendance logging is implemented separately in AttendanceLog.
 Shift resolution intentionally returns null when no employee schedule, assignment, or company default applies; raw attendance logging stores that state without introducing calculation.
 WorkdayPatternDay uses the existing 1=Monday through 7=Sunday convention, so shift_pattern_details matches that internal convention instead of the originally proposed 0=Sunday through 6=Saturday format.
@@ -886,11 +893,11 @@ Bulk correction remains deferred.
 Monthly attendance lock remains deferred.
 
 Next planned phase:
-Manual browser UAT closure or production hardening direction to be confirmed by repository owner following v1.4.6-attendance-geo-capture-enhancement.
+Attendance device management planning follows the approved v1.4.7-attendance-selfie-verification milestone.
 
 Next Sprint
 Recommended future milestone:
-v1.4.7 Attendance Browser UAT Closure & Production Hardening
+v1.4.8 Attendance Device Management
 
 Roadmap Update
 
@@ -900,8 +907,9 @@ Accepted stable baseline roadmap:
 [done] v1.4.2 Attendance Calculation
 [done] v1.4.3 Attendance Correction
 [done] v1.4.4 Attendance Portal Enhancement
-[done] v1.4.5 Attendance Stabilization & UX Polish
+[done] v1.4.5 Attendance Portal Stabilization
 [done] v1.4.6 Attendance Geo Capture Enhancement
+[done] v1.4.7 Attendance Selfie Verification
 
 Sprint 5 Attendance Enterprise
 ✅ v1.4.0 Attendance Foundation
@@ -909,8 +917,13 @@ Sprint 5 Attendance Enterprise
 ✅ v1.4.2 Attendance Calculation
 ✅ v1.4.3 Attendance Correction
 ✅ v1.4.4 Attendance Portal Enhancement
-✅ v1.4.5 Attendance Stabilization & UX Polish
+✅ v1.4.5 Attendance Portal Stabilization
 ✅ v1.4.6 Attendance Geo Capture Enhancement
+✅ v1.4.7 Attendance Selfie Verification
+⏳ v1.4.8 Attendance Device Management
+⬜ v1.4.9 Attendance Overtime Integration
+⬜ v1.4.10 Attendance Payroll Readiness
+⬜ Sprint 6 Payroll Enterprise
 
 Phase 2 Complete
 v1.3.0 Leave Foundation
@@ -921,12 +934,10 @@ v1.3.4 Access Scope Hardening
 v1.3.5 Stabilization Check
 
 Next Phase
-v1.4.7 Attendance Browser UAT Closure & Production Hardening
-or
-v1.5.0 Payroll Enterprise Enhancement if manual browser UAT passes without issue
+v1.4.8 Attendance Device Management
 
 Next Planned Milestone:
-v1.4.7 Attendance Browser UAT Closure & Production Hardening
+v1.4.8 Attendance Device Management
 
 Sprint 4 prerequisites already completed:
 

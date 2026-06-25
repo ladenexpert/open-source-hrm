@@ -59,8 +59,15 @@ class AttendancePolicyResource extends Resource
                             ->default(AttendancePolicy::LOCATION_MODE_FIXED)
                             ->required()
                             ->searchable(),
+                    ]),
+                ]),
+            Section::make('Verification & Security')
+                ->schema([
+                    Grid::make(2)->schema([
                         Toggle::make('gps_required')->default(false),
-                        Toggle::make('selfie_required')->default(false),
+                        Toggle::make('require_selfie')
+                            ->label('Require Selfie Verification')
+                            ->default(false),
                         Toggle::make('radius_validation_enabled')
                             ->label('Enable Radius Validation')
                             ->default(false)
@@ -105,7 +112,7 @@ class AttendancePolicyResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => AttendancePolicy::locationModeLabels()[$state] ?? $state),
                 IconColumn::make('gps_required')->label('GPS Required')->boolean(),
-                IconColumn::make('selfie_required')->label('Selfie Required')->boolean(),
+                IconColumn::make('require_selfie')->label('Selfie Required')->boolean(),
                 TextColumn::make('late_tolerance_minutes')->label('Late Tolerance')->sortable(),
                 IconColumn::make('is_active')->label('Active')->boolean(),
             ])

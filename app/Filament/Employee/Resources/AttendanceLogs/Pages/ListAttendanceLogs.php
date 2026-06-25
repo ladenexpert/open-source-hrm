@@ -7,6 +7,7 @@ use App\Models\AttendanceLog;
 use App\Models\Employee;
 use App\Services\Attendance\AttendanceLocationValidationService;
 use App\Services\Attendance\AttendanceLogService;
+use App\Services\Attendance\AttendancePolicyResolverService;
 use App\Services\Attendance\ShiftResolverService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -53,6 +54,9 @@ class ListAttendanceLogs extends ListRecords
         string $method,
         ?float $latitude = null,
         ?float $longitude = null,
+        ?string $selfie = null,
+        array $deviceInfo = [],
+        array $metadata = [],
     ): bool
     {
         $user = auth()->user();
@@ -68,6 +72,9 @@ class ListAttendanceLogs extends ListRecords
                 'user_agent' => (string) request()->userAgent(),
                 'latitude' => $latitude,
                 'longitude' => $longitude,
+                'selfie' => $selfie,
+                'device_info' => $this->sanitizeJsonPayload($deviceInfo),
+                'metadata' => $this->sanitizeJsonPayload($metadata),
             ]);
         } catch (ValidationException $exception) {
             Notification::make()
@@ -96,7 +103,13 @@ class ListAttendanceLogs extends ListRecords
         return true;
     }
 
-    public function handleGeolocationFailure(string $method, string $reason): bool
+    public function handleGeolocationFailure(
+        string $method,
+        string $reason,
+        ?string $selfie = null,
+        array $deviceInfo = [],
+        array $metadata = [],
+    ): bool
     {
         if (! $this->isSupportedAttendanceMethod($method)) {
             return false;
@@ -119,7 +132,24 @@ class ListAttendanceLogs extends ListRecords
             ->warning()
             ->send();
 
-        return $this->submitAttendanceEvent($method);
+        return $this->submitAttendanceEvent($method, null, null, $selfie, $deviceInfo, $metadata);
+    }
+
+    public function handleSelfieRequirementNotMet(string $method): bool
+    {
+        if (! $this->isSupportedAttendanceMethod($method)) {
+            return false;
+        }
+
+        Notification::make()
+            ->title(sprintf(
+                '%s requires a selfie upload under the active attendance policy.',
+                $method === 'clockOut' ? 'Clock Out' : 'Clock In',
+            ))
+            ->danger()
+            ->send();
+
+        return false;
     }
 
     public function canSubmitAttendanceWithoutGps(): bool
@@ -144,6 +174,19 @@ class ListAttendanceLogs extends ListRecords
         return (bool) $validation['is_valid'];
     }
 
+    public function requiresSelfieVerification(): bool
+    {
+        $user = auth()->user();
+
+        if (! $user instanceof Employee) {
+            return false;
+        }
+
+        return app(AttendancePolicyResolverService::class)
+            ->resolvePolicy($user)
+            ?->requiresSelfie() ?? false;
+    }
+
     private function isSupportedAttendanceMethod(string $method): bool
     {
         return in_array($method, ['clockIn', 'clockOut'], true);
@@ -165,5 +208,22 @@ class ListAttendanceLogs extends ListRecords
             'unavailable' => 'Unable to detect your location. Please try again.',
             default => 'Unable to detect your location. Please try again.',
         };
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function sanitizeJsonPayload(array $payload): array
+    {
+        return collect($payload)
+            ->filter(static fn (mixed $value): bool => $value !== null && $value !== '')
+            ->map(static function (mixed $value): mixed {
+                if (is_scalar($value) || is_array($value)) {
+                    return $value;
+                }
+
+                return (string) $value;
+            })
+            ->all();
     }
 }

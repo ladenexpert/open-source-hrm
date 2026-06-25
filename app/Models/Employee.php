@@ -463,6 +463,11 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->hasMany(AttendanceLog::class);
     }
 
+    public function attendanceSelfies(): HasMany
+    {
+        return $this->hasMany(AttendanceSelfie::class);
+    }
+
     public function attendanceSummaries(): HasMany
     {
         return $this->hasMany(AttendanceSummary::class);

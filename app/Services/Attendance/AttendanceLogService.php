@@ -9,6 +9,8 @@ use App\Models\WorkLocation;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use InvalidArgumentException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AttendanceLogService
 {
@@ -18,6 +20,8 @@ class AttendanceLogService
     public function __construct(
         private readonly ShiftResolverService $shiftResolverService,
         private readonly AttendanceLocationValidationService $attendanceLocationValidationService,
+        private readonly AttendancePolicyResolverService $attendancePolicyResolverService,
+        private readonly AttendanceSelfieService $attendanceSelfieService,
     ) {
     }
 
@@ -38,6 +42,18 @@ class AttendanceLogService
         }
 
         $clockedAt = $this->resolveClockedAt($payload['clocked_at'] ?? null);
+        $attendancePolicy = $this->attendancePolicyResolverService->resolvePolicy($employee);
+        $selfieUpload = $payload['selfie'] ?? null;
+
+        if (($attendancePolicy?->requiresSelfie() ?? false) && ! $this->attendanceSelfieService->hasSelfie($selfieUpload)) {
+            throw ValidationException::withMessages([
+                'selfie' => sprintf(
+                    '%s requires a selfie upload under the active attendance policy.',
+                    AttendanceLog::eventTypeLabels()[$eventType] ?? 'This attendance action',
+                ),
+            ]);
+        }
+
         $resolution = $this->shiftResolverService->resolve($employee, $clockedAt->copy());
         $workLocation = $this->resolveWorkLocation($employee, $resolution);
         $latitude = $this->resolveFloat($payload['latitude'] ?? null);
@@ -55,28 +71,54 @@ class AttendanceLogService
             (bool) $validation['is_valid'],
         );
 
-        return AttendanceLog::query()->create([
-            'company_id' => $employee->getEffectiveCompanyId(),
-            'employee_id' => $employee->getKey(),
-            'attendance_date' => $clockedAt->toDateString(),
-            'event_type' => $eventType,
-            'clocked_at' => $clockedAt,
-            'source' => $this->resolveSource($payload['source'] ?? null),
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-            'work_location_id' => $workLocation?->getKey(),
-            'shift_pattern_id' => $resolution->shiftPattern?->getKey(),
-            'shift_assignment_id' => $resolution->shiftAssignment?->getKey(),
-            'employee_schedule_id' => $resolution->employeeSchedule?->getKey(),
-            'is_valid' => $validation['is_valid'],
-            'validation_message' => $validation['message'],
-            'selfie_path' => $payload['selfie_path'] ?? null,
-            'device_identifier' => $payload['device_identifier'] ?? null,
-            'ip_address' => $payload['ip_address'] ?? null,
-            'user_agent' => $payload['user_agent'] ?? null,
-            'notes' => $payload['notes'] ?? null,
-            'created_by' => $this->resolveCreatedBy($employee, $payload['created_by'] ?? null),
-        ]);
+        return DB::transaction(function () use (
+            $clockedAt,
+            $employee,
+            $eventType,
+            $latitude,
+            $longitude,
+            $payload,
+            $resolution,
+            $selfieUpload,
+            $validation,
+            $workLocation,
+        ): AttendanceLog {
+            $log = AttendanceLog::query()->create([
+                'company_id' => $employee->getEffectiveCompanyId(),
+                'employee_id' => $employee->getKey(),
+                'attendance_date' => $clockedAt->toDateString(),
+                'event_type' => $eventType,
+                'clocked_at' => $clockedAt,
+                'source' => $this->resolveSource($payload['source'] ?? null),
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'work_location_id' => $workLocation?->getKey(),
+                'shift_pattern_id' => $resolution->shiftPattern?->getKey(),
+                'shift_assignment_id' => $resolution->shiftAssignment?->getKey(),
+                'employee_schedule_id' => $resolution->employeeSchedule?->getKey(),
+                'is_valid' => $validation['is_valid'],
+                'validation_message' => $validation['message'],
+                'selfie_path' => $payload['selfie_path'] ?? null,
+                'device_identifier' => $payload['device_identifier'] ?? null,
+                'ip_address' => $payload['ip_address'] ?? null,
+                'user_agent' => $payload['user_agent'] ?? null,
+                'notes' => $payload['notes'] ?? null,
+                'created_by' => $this->resolveCreatedBy($employee, $payload['created_by'] ?? null),
+            ]);
+
+            if ($this->attendanceSelfieService->hasSelfie($selfieUpload)) {
+                $this->attendanceSelfieService->storeForAttendance(
+                    $employee,
+                    $log,
+                    $selfieUpload,
+                    $payload['captured_at'] ?? $clockedAt,
+                    $payload['device_info'] ?? null,
+                    $payload['metadata'] ?? null,
+                );
+            }
+
+            return $log->fresh(['attendanceSelfie']) ?? $log;
+        });
     }
 
     private function resolveClockedAt(mixed $value): Carbon

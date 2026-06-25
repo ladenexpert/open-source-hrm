@@ -28,6 +28,7 @@ class AttendancePolicy extends Model
         'name',
         'location_mode',
         'gps_required',
+        'require_selfie',
         'selfie_required',
         'radius_validation_enabled',
         'radius_meters',
@@ -42,6 +43,7 @@ class AttendancePolicy extends Model
     protected $casts = [
         'company_id' => 'integer',
         'gps_required' => 'boolean',
+        'require_selfie' => 'boolean',
         'selfie_required' => 'boolean',
         'radius_validation_enabled' => 'boolean',
         'radius_meters' => 'integer',
@@ -61,6 +63,20 @@ class AttendancePolicy extends Model
                     'location_mode' => 'The selected attendance location mode is invalid.',
                 ]);
             }
+
+            $requireSelfie = $attendancePolicy->getAttribute('require_selfie');
+            $selfieRequired = $attendancePolicy->getAttribute('selfie_required');
+
+            if ($attendancePolicy->isDirty('require_selfie') && ! $attendancePolicy->isDirty('selfie_required')) {
+                $selfieRequired = $requireSelfie;
+            } elseif ($attendancePolicy->isDirty('selfie_required') && ! $attendancePolicy->isDirty('require_selfie')) {
+                $requireSelfie = $selfieRequired;
+            }
+
+            $resolvedSelfieRequirement = (bool) ($requireSelfie ?? $selfieRequired ?? false);
+
+            $attendancePolicy->require_selfie = $resolvedSelfieRequirement;
+            $attendancePolicy->selfie_required = $resolvedSelfieRequirement;
 
             if (! $attendancePolicy->radius_validation_enabled) {
                 $attendancePolicy->radius_meters = null;
@@ -102,6 +118,11 @@ class AttendancePolicy extends Model
         return $this->hasMany(ShiftAssignment::class, 'company_id', 'company_id')
             ->where('assignable_type', ShiftAssignment::ASSIGNABLE_TYPE_EMPLOYEE)
             ->whereIn('assignable_id', $this->employees()->select('id'));
+    }
+
+    public function requiresSelfie(): bool
+    {
+        return (bool) ($this->require_selfie ?? $this->selfie_required);
     }
 
     public function scopeActive(Builder $query): Builder

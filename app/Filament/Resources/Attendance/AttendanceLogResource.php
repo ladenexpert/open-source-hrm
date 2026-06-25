@@ -3,15 +3,12 @@
 namespace App\Filament\Resources\Attendance;
 
 use App\Filament\Resources\Attendance\AttendanceLogResource\Pages\ListAttendanceLogs;
+use App\Filament\Resources\Attendance\AttendanceLogResource\Pages\ViewAttendanceLog;
 use App\Models\AttendanceLog;
 use App\Models\Company;
 use App\Models\Employee;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -38,60 +35,7 @@ class AttendanceLogResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->components([
-            Section::make('Attendance Log')
-                ->schema([
-                    Grid::make(2)->schema([
-                        TextInput::make('company.name')
-                            ->label('Company')
-                            ->disabled(),
-                        TextInput::make('employee.full_name')
-                            ->label('Employee')
-                            ->disabled(),
-                        TextInput::make('attendance_date')
-                            ->disabled(),
-                        TextInput::make('clocked_at')
-                            ->disabled(),
-                        TextInput::make('event_type')
-                            ->formatStateUsing(fn (?string $state): string => AttendanceLog::eventTypeLabels()[$state] ?? (string) $state)
-                            ->disabled(),
-                        TextInput::make('source')
-                            ->formatStateUsing(fn (?string $state): string => AttendanceLog::sourceLabels()[$state] ?? (string) $state)
-                            ->disabled(),
-                        TextInput::make('workLocation.name')
-                            ->label('Work Location')
-                            ->disabled(),
-                        TextInput::make('shiftPattern.name')
-                            ->label('Shift Pattern')
-                            ->disabled(),
-                        TextInput::make('latitude')
-                            ->disabled(),
-                        TextInput::make('longitude')
-                            ->disabled(),
-                        TextInput::make('selfie_path')
-                            ->disabled(),
-                        TextInput::make('ip_address')
-                            ->disabled(),
-                        TextInput::make('device_identifier')
-                            ->disabled(),
-                        TextInput::make('createdBy.full_name')
-                            ->label('Created By')
-                            ->disabled(),
-                    ]),
-                    Textarea::make('validation_message')
-                        ->rows(3)
-                        ->disabled()
-                        ->columnSpanFull(),
-                    Textarea::make('user_agent')
-                        ->rows(3)
-                        ->disabled()
-                        ->columnSpanFull(),
-                    Textarea::make('notes')
-                        ->rows(3)
-                        ->disabled()
-                        ->columnSpanFull(),
-                ]),
-        ]);
+        return $schema;
     }
 
     public static function table(Table $table): Table
@@ -166,7 +110,8 @@ class AttendanceLogResource extends Resource
                     ]),
             ])
             ->recordActions([
-                ViewAction::make(),
+                ViewAction::make()
+                    ->url(fn (AttendanceLog $record): string => static::getUrl('view', ['record' => $record])),
             ]);
     }
 
@@ -178,6 +123,7 @@ class AttendanceLogResource extends Resource
             'workLocation',
             'shiftPattern',
             'createdBy',
+            'attendanceSelfie',
         ]);
 
         $user = Auth::user();
@@ -203,6 +149,7 @@ class AttendanceLogResource extends Resource
     {
         return [
             'index' => ListAttendanceLogs::route('/'),
+            'view' => ViewAttendanceLog::route('/{record}'),
         ];
     }
 

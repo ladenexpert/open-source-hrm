@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Validation\ValidationException;
 
 class AttendanceLog extends Model
@@ -181,6 +182,11 @@ class AttendanceLog extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'created_by');
+    }
+
+    public function attendanceSelfie(): HasOne
+    {
+        return $this->hasOne(AttendanceSelfie::class);
     }
 
     public function scopeForEmployee(Builder $query, Employee|int|null $employee): Builder
