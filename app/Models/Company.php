@@ -217,6 +217,11 @@ class Company extends Model
         return $this->hasMany(AttendanceCorrection::class);
     }
 
+    public function employeeDevices(): HasMany
+    {
+        return $this->hasMany(EmployeeDevice::class);
+    }
+
     public function leaveRequests(): HasMany
     {
         return $this->hasMany(Leave::class);

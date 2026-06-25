@@ -478,6 +478,11 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->hasMany(AttendanceCorrection::class);
     }
 
+    public function employeeDevices(): HasMany
+    {
+        return $this->hasMany(EmployeeDevice::class);
+    }
+
     public function submittedAttendanceCorrections(): HasMany
     {
         return $this->hasMany(AttendanceCorrection::class, 'submitted_by');

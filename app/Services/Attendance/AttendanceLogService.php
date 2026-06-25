@@ -22,6 +22,7 @@ class AttendanceLogService
         private readonly AttendanceLocationValidationService $attendanceLocationValidationService,
         private readonly AttendancePolicyResolverService $attendancePolicyResolverService,
         private readonly AttendanceSelfieService $attendanceSelfieService,
+        private readonly AttendanceDeviceTrustService $attendanceDeviceTrustService,
     ) {
     }
 
@@ -44,6 +45,11 @@ class AttendanceLogService
         $clockedAt = $this->resolveClockedAt($payload['clocked_at'] ?? null);
         $attendancePolicy = $this->attendancePolicyResolverService->resolvePolicy($employee);
         $selfieUpload = $payload['selfie'] ?? null;
+        $deviceInfo = is_array($payload['device_info'] ?? null) ? $payload['device_info'] : [];
+        $deviceIdentifier = $this->resolveDeviceIdentifier(
+            $payload['device_uuid'] ?? $payload['device_identifier'] ?? null,
+            $deviceInfo,
+        );
 
         if (($attendancePolicy?->requiresSelfie() ?? false) && ! $this->attendanceSelfieService->hasSelfie($selfieUpload)) {
             throw ValidationException::withMessages([
@@ -53,6 +59,16 @@ class AttendanceLogService
                 ),
             ]);
         }
+
+        $this->attendanceDeviceTrustService->registerAttempt(
+            $employee,
+            $attendancePolicy,
+            $deviceIdentifier,
+            $deviceInfo,
+            $payload['ip_address'] ?? null,
+            $payload['user_agent'] ?? null,
+            $clockedAt,
+        );
 
         $resolution = $this->shiftResolverService->resolve($employee, $clockedAt->copy());
         $workLocation = $this->resolveWorkLocation($employee, $resolution);
@@ -73,6 +89,7 @@ class AttendanceLogService
 
         return DB::transaction(function () use (
             $clockedAt,
+            $deviceIdentifier,
             $employee,
             $eventType,
             $latitude,
@@ -99,7 +116,7 @@ class AttendanceLogService
                 'is_valid' => $validation['is_valid'],
                 'validation_message' => $validation['message'],
                 'selfie_path' => $payload['selfie_path'] ?? null,
-                'device_identifier' => $payload['device_identifier'] ?? null,
+                'device_identifier' => $deviceIdentifier,
                 'ip_address' => $payload['ip_address'] ?? null,
                 'user_agent' => $payload['user_agent'] ?? null,
                 'notes' => $payload['notes'] ?? null,
@@ -229,6 +246,20 @@ class AttendanceLogService
     private function resolveFloat(mixed $value): ?float
     {
         return filled($value) ? (float) $value : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $deviceInfo
+     */
+    private function resolveDeviceIdentifier(mixed $deviceIdentifier, array $deviceInfo): ?string
+    {
+        $resolvedIdentifier = filled($deviceIdentifier)
+            ? (string) $deviceIdentifier
+            : (string) ($deviceInfo['device_uuid'] ?? '');
+
+        $resolvedIdentifier = trim($resolvedIdentifier);
+
+        return $resolvedIdentifier !== '' ? $resolvedIdentifier : null;
     }
 
     private function resolveWorkLocation(Employee $employee, ShiftResolutionResult $resolution): ?WorkLocation

@@ -21,6 +21,7 @@ use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmploymentStatus;
 use App\Models\EmploymentType;
+use App\Models\EmployeeDevice;
 use App\Models\EmployeeSchedule;
 use App\Models\Event;
 use App\Models\IdentityType;
@@ -66,6 +67,7 @@ use App\Policies\CompanySubscriptionPolicy;
 use App\Policies\CostCenterPolicy;
 use App\Policies\DepartmentPolicy;
 use App\Policies\EmployeePolicy;
+use App\Policies\EmployeeDevicePolicy;
 use App\Policies\EmployeeSchedulePolicy;
 use App\Policies\EventPolicy;
 use App\Policies\HolidayCalendarPolicy;
@@ -113,6 +115,7 @@ class AuthServiceProvider extends ServiceProvider
         SubscriptionPlan::class => SubscriptionPlanPolicy::class,
         CompanySubscription::class => CompanySubscriptionPolicy::class,
         Employee::class => EmployeePolicy::class,
+        EmployeeDevice::class => EmployeeDevicePolicy::class,
         Department::class => DepartmentPolicy::class,
         Position::class => PositionPolicy::class,
         Shift::class => ShiftPolicy::class,

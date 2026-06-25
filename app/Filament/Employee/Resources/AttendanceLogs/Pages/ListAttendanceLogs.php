@@ -57,6 +57,7 @@ class ListAttendanceLogs extends ListRecords
         ?string $selfie = null,
         array $deviceInfo = [],
         array $metadata = [],
+        ?string $deviceUuid = null,
     ): bool
     {
         $user = auth()->user();
@@ -75,11 +76,22 @@ class ListAttendanceLogs extends ListRecords
                 'selfie' => $selfie,
                 'device_info' => $this->sanitizeJsonPayload($deviceInfo),
                 'metadata' => $this->sanitizeJsonPayload($metadata),
+                'device_identifier' => $deviceUuid,
+                'device_uuid' => $deviceUuid,
             ]);
         } catch (ValidationException $exception) {
+            $messages = collect($exception->errors())
+                ->flatten()
+                ->filter()
+                ->values();
+            $title = $messages->first() ?: 'Attendance submission could not be recorded.';
+            $body = $messages->count() > 1
+                ? $messages->slice(1)->join(' ')
+                : null;
+
             Notification::make()
-                ->title($exception->getMessage() ?: 'Attendance submission could not be recorded.')
-                ->body(collect($exception->errors())->flatten()->join(' '))
+                ->title($title)
+                ->body($body)
                 ->danger()
                 ->send();
 
@@ -109,6 +121,7 @@ class ListAttendanceLogs extends ListRecords
         ?string $selfie = null,
         array $deviceInfo = [],
         array $metadata = [],
+        ?string $deviceUuid = null,
     ): bool
     {
         if (! $this->isSupportedAttendanceMethod($method)) {
@@ -132,7 +145,7 @@ class ListAttendanceLogs extends ListRecords
             ->warning()
             ->send();
 
-        return $this->submitAttendanceEvent($method, null, null, $selfie, $deviceInfo, $metadata);
+        return $this->submitAttendanceEvent($method, null, null, $selfie, $deviceInfo, $metadata, $deviceUuid);
     }
 
     public function handleSelfieRequirementNotMet(string $method): bool

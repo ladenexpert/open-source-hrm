@@ -76,6 +76,17 @@ class AttendancePolicyResource extends Resource
                             ->numeric()
                             ->minValue(0)
                             ->visible(fn ($get): bool => (bool) $get('radius_validation_enabled')),
+                        Select::make('trusted_device_mode')
+                            ->label('Trusted Device Mode')
+                            ->options(AttendancePolicy::trustedDeviceModeLabels())
+                            ->default(AttendancePolicy::TRUSTED_DEVICE_MODE_NONE)
+                            ->required(),
+                        Toggle::make('auto_trust_first_device')
+                            ->label('Auto Trust First Device')
+                            ->default(false),
+                        TextInput::make('max_trusted_devices')
+                            ->numeric()
+                            ->minValue(1),
                         TextInput::make('late_tolerance_minutes')
                             ->numeric()
                             ->minValue(0)
@@ -113,6 +124,10 @@ class AttendancePolicyResource extends Resource
                     ->formatStateUsing(fn (string $state): string => AttendancePolicy::locationModeLabels()[$state] ?? $state),
                 IconColumn::make('gps_required')->label('GPS Required')->boolean(),
                 IconColumn::make('require_selfie')->label('Selfie Required')->boolean(),
+                TextColumn::make('trusted_device_mode')
+                    ->label('Device Trust')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => AttendancePolicy::trustedDeviceModeLabels()[$state] ?? $state),
                 TextColumn::make('late_tolerance_minutes')->label('Late Tolerance')->sortable(),
                 IconColumn::make('is_active')->label('Active')->boolean(),
             ])
@@ -123,6 +138,9 @@ class AttendancePolicyResource extends Resource
                 SelectFilter::make('location_mode')
                     ->label('Location Mode')
                     ->options(AttendancePolicy::locationModeLabels()),
+                SelectFilter::make('trusted_device_mode')
+                    ->label('Device Trust')
+                    ->options(AttendancePolicy::trustedDeviceModeLabels()),
                 SelectFilter::make('is_active')
                     ->options([
                         '1' => 'Active',

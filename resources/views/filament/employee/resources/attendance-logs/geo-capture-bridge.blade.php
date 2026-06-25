@@ -2,11 +2,13 @@
     x-data="{
         canSubmitWithoutGps: @js($this->canSubmitAttendanceWithoutGps()),
         requiresSelfie: @js($this->requiresSelfieVerification()),
+        deviceUuidStorageKey: 'hrms_attendance_device_uuid',
         async requestLocation(method) {
             if (! method) {
                 return
             }
 
+            const deviceContext = this.buildDeviceContext()
             const selfieContext = this.requiresSelfie
                 ? await this.captureSelfie(method)
                 : null
@@ -18,7 +20,7 @@
             }
 
             if (! navigator.geolocation) {
-                await this.fail(method, 'unsupported', selfieContext)
+                await this.fail(method, 'unsupported', selfieContext, deviceContext)
 
                 return
             }
@@ -29,15 +31,15 @@
                     const longitude = position?.coords?.longitude ?? null
 
                     if ((latitude === null) || (longitude === null)) {
-                        await this.fail(method, 'unavailable', selfieContext)
+                        await this.fail(method, 'unavailable', selfieContext, deviceContext)
 
                         return
                     }
 
-                    await this.submit(method, latitude, longitude, selfieContext)
+                    await this.submit(method, latitude, longitude, selfieContext, deviceContext)
                 },
                 async (error) => {
-                    await this.fail(method, this.resolveReason(error), selfieContext)
+                    await this.fail(method, this.resolveReason(error), selfieContext, deviceContext)
                 },
                 {
                     enableHighAccuracy: true,
@@ -46,23 +48,25 @@
                 },
             )
         },
-        submit(method, latitude = null, longitude = null, selfieContext = null) {
+        submit(method, latitude = null, longitude = null, selfieContext = null, deviceContext = null) {
             return this.$wire.submitAttendanceEvent(
                 method,
                 latitude,
                 longitude,
                 selfieContext?.dataUrl ?? null,
-                selfieContext?.deviceInfo ?? {},
+                deviceContext?.deviceInfo ?? {},
                 selfieContext?.metadata ?? {},
+                deviceContext?.deviceUuid ?? null,
             )
         },
-        fail(method, reason, selfieContext = null) {
+        fail(method, reason, selfieContext = null, deviceContext = null) {
             return this.$wire.handleGeolocationFailure(
                 method,
                 reason,
                 selfieContext?.dataUrl ?? null,
-                selfieContext?.deviceInfo ?? {},
+                deviceContext?.deviceInfo ?? {},
                 selfieContext?.metadata ?? {},
+                deviceContext?.deviceUuid ?? null,
             )
         },
         selfieRequired(method) {
@@ -93,7 +97,6 @@
 
             return {
                 dataUrl: await this.toJpegDataUrl(file),
-                deviceInfo: this.buildDeviceInfo(),
                 metadata: {
                     original_filename: file.name ?? null,
                     original_size_bytes: file.size ?? null,
@@ -191,10 +194,81 @@
                 image.src = dataUrl
             })
         },
-        buildDeviceInfo() {
+        buildDeviceContext() {
+            const deviceUuid = this.resolveStoredDeviceUuid()
+
             return {
+                deviceUuid,
+                deviceInfo: this.buildDeviceInfo(deviceUuid),
+            }
+        },
+        resolveStoredDeviceUuid() {
+            const generatedUuid = this.generateDeviceUuid()
+
+            try {
+                const existingUuid = window.localStorage?.getItem(this.deviceUuidStorageKey)
+
+                if (existingUuid) {
+                    return existingUuid
+                }
+
+                window.localStorage?.setItem(this.deviceUuidStorageKey, generatedUuid)
+            } catch (error) {
+                return generatedUuid
+            }
+
+            return generatedUuid
+        },
+        generateDeviceUuid() {
+            if (window.crypto?.randomUUID) {
+                return window.crypto.randomUUID()
+            }
+
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+                const random = Math.floor(Math.random() * 16)
+                const value = character === 'x'
+                    ? random
+                    : ((random & 0x3) | 0x8)
+
+                return value.toString(16)
+            })
+        },
+        resolveBrowserName() {
+            const userAgent = (navigator.userAgent ?? '').toLowerCase()
+
+            if (userAgent.includes('edg/')) {
+                return 'Edge'
+            }
+
+            if (userAgent.includes('opr/') || userAgent.includes('opera')) {
+                return 'Opera'
+            }
+
+            if (userAgent.includes('chrome/')) {
+                return 'Chrome'
+            }
+
+            if (userAgent.includes('firefox/')) {
+                return 'Firefox'
+            }
+
+            if (userAgent.includes('safari/') && ! userAgent.includes('chrome/')) {
+                return 'Safari'
+            }
+
+            return null
+        },
+        buildDeviceInfo(deviceUuid = null) {
+            const browser = this.resolveBrowserName()
+            const platform = navigator.userAgentData?.platform ?? navigator.platform ?? null
+            const deviceName = [browser, platform].filter(Boolean).join(' on ')
+
+            return {
+                browser,
+                device_name: deviceName || null,
+                device_uuid: deviceUuid,
                 user_agent: navigator.userAgent ?? null,
-                platform: navigator.platform ?? null,
+                platform,
                 language: navigator.language ?? null,
                 screen_width: window.screen?.width ?? null,
                 screen_height: window.screen?.height ?? null,

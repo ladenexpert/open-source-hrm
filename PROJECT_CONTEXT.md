@@ -1,4 +1,4 @@
-HRMS Enterprise Project Context
+﻿HRMS Enterprise Project Context
 Product Vision
 
 Build an enterprise-grade HRMS comparable to Talenta and SAP SuccessFactors for Indonesian enterprises, optimized for Indonesian regulations while supporting multinational organizations, Korean expatriate workforce, multi-company structures, and future SaaS commercialization.
@@ -227,11 +227,31 @@ Validation completed successfully with:
 - 309 tests passed
 - 851 assertions
 - Existing AttendanceGeoCaptureV146Test remained green
+v1.4.8-attendance-device-trust-management
+Attendance device trust management completed
+* Added employee device trust management for attendance.
+* Added employee_devices audit/trust model and migrations.
+* Added device trust settings to Attendance Policy:
+  * trusted_device_mode: none, warn, enforce
+  * auto_trust_first_device
+  * max_trusted_devices
+* Device trust management is optional by default.
+* Browser/device UUID is generated client-side and stored in localStorage.
+* Implementation avoids invasive browser fingerprinting.
+* Unknown devices are auto-registered for audit and review.
+* Shared device usage is supported by avoiding global device_uuid uniqueness.
+* Attendance pipeline now supports GPS, radius, selfie, and trusted device validation while preserving existing behavior.
+* Admin device management was added with trust, revoke, deactivate, delete, and pending-device visibility.
+* Added AttendanceDeviceTrustManagementV148Test coverage.
+* Existing AttendanceGeoCaptureV146Test and AttendanceSelfieCaptureV147Test remained green.
+* Validation completed successfully with:
+  * 319 tests passed
+  * 899 assertions
 Repository State
 
 Current stable milestone:
 
-v1.4.7-attendance-selfie-verification
+v1.4.8-attendance-device-trust-management
 
 Repository status expectations:
 
@@ -242,15 +262,15 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.4.7-attendance-selfie-verification
+v1.4.8-attendance-device-trust-management
 
 Current test baseline:
-309 tests
-851 assertions
+319 tests
+899 assertions
 No automated regressions detected
 
 Manual browser UAT status:
-Completed and approved by project owner for v1.4.7-attendance-selfie-verification
+Completed and approved by project owner for v1.4.8-attendance-device-trust-management
 
 ## License Hygiene Policy
 
@@ -872,7 +892,7 @@ GPS-ready attendance location support is available for Phase 3 attendance work.
 
 Phase transition confirmation:
 Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
-Phase 3 Attendance Enterprise is active on the completed v1.4.7-attendance-selfie-verification baseline.
+Phase 3 Attendance Enterprise is active on the completed v1.4.8-attendance-device-trust-management baseline.
 
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
@@ -893,11 +913,11 @@ Bulk correction remains deferred.
 Monthly attendance lock remains deferred.
 
 Next planned phase:
-Attendance device management planning follows the approved v1.4.7-attendance-selfie-verification milestone.
+Attendance overtime integration planning follows the approved v1.4.8-attendance-device-trust-management milestone.
 
 Next Sprint
 Recommended future milestone:
-v1.4.8 Attendance Device Management
+v1.4.9 Attendance Overtime Integration
 
 Roadmap Update
 
@@ -910,6 +930,7 @@ Accepted stable baseline roadmap:
 [done] v1.4.5 Attendance Portal Stabilization
 [done] v1.4.6 Attendance Geo Capture Enhancement
 [done] v1.4.7 Attendance Selfie Verification
+[done] v1.4.8 Attendance Device Trust Management
 
 Sprint 5 Attendance Enterprise
 ✅ v1.4.0 Attendance Foundation
@@ -920,8 +941,8 @@ Sprint 5 Attendance Enterprise
 ✅ v1.4.5 Attendance Portal Stabilization
 ✅ v1.4.6 Attendance Geo Capture Enhancement
 ✅ v1.4.7 Attendance Selfie Verification
-⏳ v1.4.8 Attendance Device Management
-⬜ v1.4.9 Attendance Overtime Integration
+✅ v1.4.8 Attendance Device Trust Management
+⏳ v1.4.9 Attendance Overtime Integration
 ⬜ v1.4.10 Attendance Payroll Readiness
 ⬜ Sprint 6 Payroll Enterprise
 
@@ -934,13 +955,12 @@ v1.3.4 Access Scope Hardening
 v1.3.5 Stabilization Check
 
 Next Phase
-v1.4.8 Attendance Device Management
+v1.4.9 Attendance Overtime Integration
 
 Next Planned Milestone:
-v1.4.8 Attendance Device Management
+v1.4.9 Attendance Overtime Integration
 
 Sprint 4 prerequisites already completed:
-
 Security & RBAC
 Tenancy Foundation
 Indonesian HR Foundation

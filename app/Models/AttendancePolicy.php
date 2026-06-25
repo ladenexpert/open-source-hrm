@@ -22,6 +22,12 @@ class AttendancePolicy extends Model
 
     public const LOCATION_MODE_SCHEDULED = 'scheduled';
 
+    public const TRUSTED_DEVICE_MODE_NONE = 'none';
+
+    public const TRUSTED_DEVICE_MODE_WARN = 'warn';
+
+    public const TRUSTED_DEVICE_MODE_ENFORCE = 'enforce';
+
     protected $fillable = [
         'company_id',
         'code',
@@ -32,6 +38,9 @@ class AttendancePolicy extends Model
         'selfie_required',
         'radius_validation_enabled',
         'radius_meters',
+        'trusted_device_mode',
+        'auto_trust_first_device',
+        'max_trusted_devices',
         'late_tolerance_minutes',
         'early_out_tolerance_minutes',
         'minimum_work_minutes',
@@ -47,6 +56,8 @@ class AttendancePolicy extends Model
         'selfie_required' => 'boolean',
         'radius_validation_enabled' => 'boolean',
         'radius_meters' => 'integer',
+        'auto_trust_first_device' => 'boolean',
+        'max_trusted_devices' => 'integer',
         'late_tolerance_minutes' => 'integer',
         'early_out_tolerance_minutes' => 'integer',
         'minimum_work_minutes' => 'integer',
@@ -58,9 +69,18 @@ class AttendancePolicy extends Model
     protected static function booted(): void
     {
         static::saving(function (self $attendancePolicy): void {
+            $attendancePolicy->trusted_device_mode ??= self::TRUSTED_DEVICE_MODE_NONE;
+            $attendancePolicy->auto_trust_first_device ??= false;
+
             if (! in_array($attendancePolicy->location_mode, self::locationModeOptions(), true)) {
                 throw ValidationException::withMessages([
                     'location_mode' => 'The selected attendance location mode is invalid.',
+                ]);
+            }
+
+            if (! in_array($attendancePolicy->trusted_device_mode, self::trustedDeviceModeOptions(), true)) {
+                throw ValidationException::withMessages([
+                    'trusted_device_mode' => 'The selected trusted device mode is invalid.',
                 ]);
             }
 
@@ -80,6 +100,16 @@ class AttendancePolicy extends Model
 
             if (! $attendancePolicy->radius_validation_enabled) {
                 $attendancePolicy->radius_meters = null;
+            }
+
+            if (blank($attendancePolicy->max_trusted_devices)) {
+                $attendancePolicy->max_trusted_devices = null;
+            }
+
+            if (filled($attendancePolicy->max_trusted_devices) && (int) $attendancePolicy->max_trusted_devices < 1) {
+                throw ValidationException::withMessages([
+                    'max_trusted_devices' => 'The maximum trusted devices value must be at least 1.',
+                ]);
             }
         });
     }
@@ -108,6 +138,30 @@ class AttendancePolicy extends Model
         ];
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public static function trustedDeviceModeOptions(): array
+    {
+        return [
+            self::TRUSTED_DEVICE_MODE_NONE,
+            self::TRUSTED_DEVICE_MODE_WARN,
+            self::TRUSTED_DEVICE_MODE_ENFORCE,
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function trustedDeviceModeLabels(): array
+    {
+        return [
+            self::TRUSTED_DEVICE_MODE_NONE => 'Disabled',
+            self::TRUSTED_DEVICE_MODE_WARN => 'Warn',
+            self::TRUSTED_DEVICE_MODE_ENFORCE => 'Enforce',
+        ];
+    }
+
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class);
@@ -123,6 +177,11 @@ class AttendancePolicy extends Model
     public function requiresSelfie(): bool
     {
         return (bool) ($this->require_selfie ?? $this->selfie_required);
+    }
+
+    public function enforcesTrustedDevices(): bool
+    {
+        return $this->trusted_device_mode === self::TRUSTED_DEVICE_MODE_ENFORCE;
     }
 
     public function scopeActive(Builder $query): Builder
