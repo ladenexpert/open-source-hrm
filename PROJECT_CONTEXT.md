@@ -289,11 +289,33 @@ Attendance payroll readiness completed
 * Existing attendance, overtime, and payroll behavior remain unchanged.
 * Validation completed successfully with:
   * 341 tests passed
+  * 976 assertions
+
+v1.5.0-payroll-period-and-run-foundation
+Payroll period and run foundation completed
+* Started Sprint 6 Payroll Enterprise.
+* Added or reused minimal payroll period and payroll run foundation.
+* Added PayrollPeriod, PayrollRun, and PayrollRunEmployee domain structures.
+* Added service-based payroll run preparation.
+* Payroll run preparation references AttendancePayrollSnapshot from v1.4.10.
+* PayrollRunEmployee stores non-monetary attendance readiness totals only.
+* Missing, stale, or cancelled attendance snapshots block employee readiness.
+* Calculated or locked non-stale snapshots can be used for payroll readiness.
+* Payroll run preparation is idempotent.
+* Payroll run locking prevents re-preparation.
+* Payroll run cannot be locked while blocked employees exist.
+* Duplicate active regular payroll run for the same period is prevented where practical.
+* Correction and off-cycle run types are reserved for future use.
+* No salary, allowance, deduction, tax, BPJS, THR, gross pay, net pay, take-home pay, payslip final amount, or payroll posting is calculated.
+* Existing attendance, overtime, and attendance payroll readiness behavior remains unchanged.
+* Validation completed successfully with:
+  * 353 tests passed
+  * 1043 assertions
 Repository State
 
 Current stable milestone:
 
-v1.4.10-attendance-payroll-readiness
+v1.5.0-payroll-period-and-run-foundation
 
 Repository status expectations:
 
@@ -304,15 +326,16 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.4.10-attendance-payroll-readiness
+v1.5.0-payroll-period-and-run-foundation
 
 Current test baseline:
-341 tests
-976 assertions
+353 tests
+1043 assertions
 No automated regressions detected
 
 Manual browser UAT status:
-Completed and approved by project owner for v1.4.10-attendance-payroll-readiness
+Owner manual review, commit, push, and tag remain pending for v1.5.0-payroll-period-and-run-foundation.
+PROJECT_CONTEXT.md was updated after successful technical validation per the Sprint 6 workflow.
 
 ## License Hygiene Policy
 
@@ -949,7 +972,7 @@ WorkdayPatternDay uses the existing 1=Monday through 7=Sunday convention, so shi
 Half-day leave is already modeled in LeaveRequest, but attendance summary leave override remains limited to approved full-day leave handling in v1.4.2.
 Holiday and weekend resolution uses the existing company-scoped active holiday calendar and active/default workday pattern; no employee-specific calendar assignment layer has been introduced yet.
 Overtime foundation now exists as attendance-readiness only; no payroll payable overtime calculation is implemented yet.
-Attendance payroll readiness now exists as a non-monetary snapshot layer only; payroll periods/runs, salary calculation, allowances, deductions, tax, BPJS, THR, net pay, payslip finalization, and payroll posting remain deferred.
+Attendance payroll readiness now exists as a non-monetary snapshot layer, and payroll period/run orchestration now exists as a non-monetary foundation only; salary calculation, allowances, deductions, tax, BPJS, THR, net pay, payslip finalization, and payroll posting remain deferred.
 No full payroll integration is implemented yet.
 Approved correction reversal remains deferred to a future sprint.
 Bulk correction remains deferred.
@@ -960,7 +983,7 @@ Sprint 6 Payroll Enterprise
 
 Next Sprint
 Recommended future milestone:
-v1.5.0-payroll-period-and-run-foundation
+v1.5.1-payroll-component-foundation
 
 Roadmap Update
 
@@ -1000,9 +1023,39 @@ v1.3.5 Stabilization Check
 
 Next Phase
 Sprint 6 Payroll Enterprise
+✅ v1.5.0 Payroll Period and Run Foundation
+⏳ v1.5.1 Payroll Component Foundation
+⬜ v1.5.2 Employee Payroll Profile and Salary Assignment
+⬜ v1.5.3 Payroll Calculation Draft
+⬜ v1.5.4 Payroll Review and Approval
+⬜ v1.5.5 Payslip Generation
+⬜ v1.5.6 Payroll Locking and Audit Hardening
 
 Next Planned Milestone:
+v1.5.1-payroll-component-foundation
+
+Milestone Summary
+
 v1.5.0-payroll-period-and-run-foundation
+
+* Started Sprint 6 Payroll Enterprise.
+* Added or reused minimal payroll period and payroll run foundation.
+* Added PayrollPeriod, PayrollRun, and PayrollRunEmployee domain structures if not already present.
+* Added service-based payroll run preparation.
+* Payroll run preparation references AttendancePayrollSnapshot from v1.4.10.
+* PayrollRunEmployee stores non-monetary attendance readiness totals only.
+* Missing, stale, or cancelled attendance snapshots block employee readiness.
+* Calculated or locked non-stale snapshots can be used for payroll readiness.
+* Payroll run preparation is idempotent.
+* Payroll run locking prevents re-preparation.
+* Payroll run cannot be locked while blocked employees exist.
+* Duplicate active regular payroll run for the same period is prevented where practical.
+* Correction and off-cycle run types are reserved for future use.
+* No salary, allowance, deduction, tax, BPJS, THR, gross pay, net pay, take-home pay, payslip final amount, or payroll posting is calculated.
+* Existing attendance, overtime, and attendance payroll readiness behavior remains unchanged.
+* Validation completed successfully with the final test result:
+  * 353 tests passed
+  * 1043 assertions
 
 Sprint 4 prerequisites already completed:
 Security & RBAC

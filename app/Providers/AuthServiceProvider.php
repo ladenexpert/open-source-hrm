@@ -42,6 +42,9 @@ use App\Models\Message;
 use App\Models\OvertimeCalculation;
 use App\Models\OvertimeRequest;
 use App\Models\Payroll;
+use App\Models\PayrollPeriod;
+use App\Models\PayrollRun;
+use App\Models\PayrollRunEmployee;
 use App\Models\Position;
 use App\Models\Religion;
 use App\Models\Shift;
@@ -87,6 +90,9 @@ use App\Policies\MessagePolicy;
 use App\Policies\OvertimeCalculationPolicy;
 use App\Policies\OvertimeRequestPolicy;
 use App\Policies\PayrollPolicy;
+use App\Policies\PayrollPeriodPolicy;
+use App\Policies\PayrollRunEmployeePolicy;
+use App\Policies\PayrollRunPolicy;
 use App\Policies\PositionPolicy;
 use App\Policies\ScopedMasterDataPolicy;
 use App\Policies\ShiftPolicy;
@@ -150,6 +156,9 @@ class AuthServiceProvider extends ServiceProvider
         ShiftPattern::class => ShiftPatternPolicy::class,
         ShiftAssignment::class => ShiftAssignmentPolicy::class,
         Payroll::class => PayrollPolicy::class,
+        PayrollPeriod::class => PayrollPeriodPolicy::class,
+        PayrollRun::class => PayrollRunPolicy::class,
+        PayrollRunEmployee::class => PayrollRunEmployeePolicy::class,
         Message::class => MessagePolicy::class,
         Topic::class => TopicPolicy::class,
         Task::class => TaskPolicy::class,
