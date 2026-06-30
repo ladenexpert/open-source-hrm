@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call(TenancySeeder::class);
         $this->call(HrMasterDataSeeder::class);
         $this->call(SampleWorkforceSeeder::class);
+        $this->call(PayrollComponentSeeder::class);
         $this->call(ApprovalWorkflowSeeder::class);
         $this->call(LeaveFoundationSeeder::class);
         $this->call(LeaveBalanceSeeder::class);

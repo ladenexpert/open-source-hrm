@@ -291,31 +291,29 @@ Attendance payroll readiness completed
   * 341 tests passed
   * 976 assertions
 
-v1.5.0-payroll-period-and-run-foundation
-Payroll period and run foundation completed
-* Started Sprint 6 Payroll Enterprise.
-* Added or reused minimal payroll period and payroll run foundation.
-* Added PayrollPeriod, PayrollRun, and PayrollRunEmployee domain structures.
-* Added service-based payroll run preparation.
-* Payroll run preparation references AttendancePayrollSnapshot from v1.4.10.
-* PayrollRunEmployee stores non-monetary attendance readiness totals only.
-* Missing, stale, or cancelled attendance snapshots block employee readiness.
-* Calculated or locked non-stale snapshots can be used for payroll readiness.
-* Payroll run preparation is idempotent.
-* Payroll run locking prevents re-preparation.
-* Payroll run cannot be locked while blocked employees exist.
-* Duplicate active regular payroll run for the same period is prevented where practical.
-* Correction and off-cycle run types are reserved for future use.
-* No salary, allowance, deduction, tax, BPJS, THR, gross pay, net pay, take-home pay, payslip final amount, or payroll posting is calculated.
+v1.5.1-payroll-component-foundation
+Payroll component foundation completed
+* Added or reused flexible payroll component master data foundation.
+* Added component classifications for earning, deduction, benefit, tax, employer contribution, and informational components.
+* Added value type support for fixed, percentage, formula placeholder, and manual components.
+* Added configurable flags for taxable, tax deductible, BPJS applicable, THR applicable, proratable, recurring, active, and sort order.
+* Added employment category readiness for permanent, contract/PKWT, daily worker/production manpower, intern, expatriate, probation, part-time, and future workforce categories through flexible applicability metadata.
+* Added expatriate, daily worker, intern, and contract readiness placeholders without implementing payroll calculation.
+* Added minimal Filament admin management for payroll components.
+* Added service, factory, and test coverage where appropriate.
+* No employee-specific salary assignment was implemented yet.
+* No employee payroll profile was implemented yet.
+* No salary, allowance, deduction, tax, BPJS, THR, gross pay, net pay, take-home pay, payslip final amount, or payroll posting was calculated.
+* Existing payroll period/run foundation behavior remains unchanged.
 * Existing attendance, overtime, and attendance payroll readiness behavior remains unchanged.
 * Validation completed successfully with:
-  * 353 tests passed
-  * 1043 assertions
+  * 362 tests passed
+  * 1077 assertions
 Repository State
 
 Current stable milestone:
 
-v1.5.0-payroll-period-and-run-foundation
+v1.5.1-payroll-component-foundation
 
 Repository status expectations:
 
@@ -326,15 +324,15 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.5.0-payroll-period-and-run-foundation
+v1.5.1-payroll-component-foundation
 
 Current test baseline:
-353 tests
-1043 assertions
+362 tests
+1077 assertions
 No automated regressions detected
 
 Manual browser UAT status:
-Owner manual review, commit, push, and tag remain pending for v1.5.0-payroll-period-and-run-foundation.
+Owner manual review, commit, push, and tag remain pending for v1.5.1-payroll-component-foundation.
 PROJECT_CONTEXT.md was updated after successful technical validation per the Sprint 6 workflow.
 
 ## License Hygiene Policy
@@ -983,7 +981,7 @@ Sprint 6 Payroll Enterprise
 
 Next Sprint
 Recommended future milestone:
-v1.5.1-payroll-component-foundation
+v1.5.2-employee-payroll-profile-and-salary-assignment
 
 Roadmap Update
 
@@ -1024,38 +1022,36 @@ v1.3.5 Stabilization Check
 Next Phase
 Sprint 6 Payroll Enterprise
 ✅ v1.5.0 Payroll Period and Run Foundation
-⏳ v1.5.1 Payroll Component Foundation
-⬜ v1.5.2 Employee Payroll Profile and Salary Assignment
+✅ v1.5.1 Payroll Component Foundation
+⏳ v1.5.2 Employee Payroll Profile and Salary Assignment
 ⬜ v1.5.3 Payroll Calculation Draft
 ⬜ v1.5.4 Payroll Review and Approval
 ⬜ v1.5.5 Payslip Generation
 ⬜ v1.5.6 Payroll Locking and Audit Hardening
 
 Next Planned Milestone:
-v1.5.1-payroll-component-foundation
+v1.5.2-employee-payroll-profile-and-salary-assignment
 
 Milestone Summary
 
-v1.5.0-payroll-period-and-run-foundation
+v1.5.1-payroll-component-foundation
 
-* Started Sprint 6 Payroll Enterprise.
-* Added or reused minimal payroll period and payroll run foundation.
-* Added PayrollPeriod, PayrollRun, and PayrollRunEmployee domain structures if not already present.
-* Added service-based payroll run preparation.
-* Payroll run preparation references AttendancePayrollSnapshot from v1.4.10.
-* PayrollRunEmployee stores non-monetary attendance readiness totals only.
-* Missing, stale, or cancelled attendance snapshots block employee readiness.
-* Calculated or locked non-stale snapshots can be used for payroll readiness.
-* Payroll run preparation is idempotent.
-* Payroll run locking prevents re-preparation.
-* Payroll run cannot be locked while blocked employees exist.
-* Duplicate active regular payroll run for the same period is prevented where practical.
-* Correction and off-cycle run types are reserved for future use.
-* No salary, allowance, deduction, tax, BPJS, THR, gross pay, net pay, take-home pay, payslip final amount, or payroll posting is calculated.
+* Added or reused flexible payroll component master data foundation.
+* Added component classifications for earning, deduction, benefit, tax, employer contribution, and informational components.
+* Added value type support for fixed, percentage, formula placeholder, and manual components.
+* Added configurable flags for taxable, tax deductible, BPJS applicable, THR applicable, proratable, recurring, active, and sort order.
+* Added employment category readiness for permanent, contract/PKWT, daily worker/production manpower, intern, expatriate, probation, part-time, and future workforce categories through flexible applicability metadata.
+* Added expatriate, daily worker, intern, and contract readiness placeholders without implementing payroll calculation.
+* Added minimal Filament admin management for payroll components.
+* Added service/factory/test coverage where appropriate.
+* No employee-specific salary assignment was implemented yet.
+* No employee payroll profile was implemented yet.
+* No salary, allowance, deduction, tax, BPJS, THR, gross pay, net pay, take-home pay, payslip final amount, or payroll posting was calculated.
+* Existing payroll period/run foundation behavior remains unchanged.
 * Existing attendance, overtime, and attendance payroll readiness behavior remains unchanged.
 * Validation completed successfully with the final test result:
-  * 353 tests passed
-  * 1043 assertions
+  * 362 tests passed
+  * 1077 assertions
 
 Sprint 4 prerequisites already completed:
 Security & RBAC

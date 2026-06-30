@@ -287,6 +287,11 @@ class Company extends Model
         return $this->hasMany(Payroll::class);
     }
 
+    public function payrollComponents(): HasMany
+    {
+        return $this->hasMany(PayrollComponent::class);
+    }
+
     public function topics(): HasMany
     {
         return $this->hasMany(Topic::class);

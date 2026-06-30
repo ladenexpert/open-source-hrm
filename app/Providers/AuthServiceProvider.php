@@ -42,6 +42,7 @@ use App\Models\Message;
 use App\Models\OvertimeCalculation;
 use App\Models\OvertimeRequest;
 use App\Models\Payroll;
+use App\Models\PayrollComponent;
 use App\Models\PayrollPeriod;
 use App\Models\PayrollRun;
 use App\Models\PayrollRunEmployee;
@@ -90,6 +91,7 @@ use App\Policies\MessagePolicy;
 use App\Policies\OvertimeCalculationPolicy;
 use App\Policies\OvertimeRequestPolicy;
 use App\Policies\PayrollPolicy;
+use App\Policies\PayrollComponentPolicy;
 use App\Policies\PayrollPeriodPolicy;
 use App\Policies\PayrollRunEmployeePolicy;
 use App\Policies\PayrollRunPolicy;
@@ -156,6 +158,7 @@ class AuthServiceProvider extends ServiceProvider
         ShiftPattern::class => ShiftPatternPolicy::class,
         ShiftAssignment::class => ShiftAssignmentPolicy::class,
         Payroll::class => PayrollPolicy::class,
+        PayrollComponent::class => PayrollComponentPolicy::class,
         PayrollPeriod::class => PayrollPeriodPolicy::class,
         PayrollRun::class => PayrollRunPolicy::class,
         PayrollRunEmployee::class => PayrollRunEmployeePolicy::class,
