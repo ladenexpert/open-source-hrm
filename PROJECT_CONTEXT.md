@@ -267,11 +267,33 @@ Overtime attendance readiness completed
 * Validation completed successfully with:
   * 334 tests passed
   * 932 assertions
+v1.4.10-attendance-payroll-readiness
+Attendance payroll readiness completed
+* Added a minimal non-monetary attendance payroll readiness layer.
+* Added AttendancePayrollSnapshot domain model and migration.
+* Added AttendancePayrollReadinessService as a service-based attendance-to-payroll readiness aggregator.
+* Added lightweight Filament admin visibility through AttendancePayrollSnapshotResource.
+* Added AttendancePayrollReadinessV1410Test coverage.
+* Registered the new policy in AuthServiceProvider.
+* Because the repo does not currently have a usable payroll_periods foundation, snapshots use explicit period_start and period_end boundaries.
+* AttendanceSummary remains the source of truth for attendance readiness.
+* Approved and calculated OvertimeCalculation records are included in snapshot totals.
+* Pending, rejected, cancelled, or non-calculated overtime is excluded.
+* Approved attendance corrections are counted.
+* Approved leave request IDs are traced where safely available.
+* Snapshot calculation is idempotent.
+* Snapshot locking is supported.
+* Manual/programmatic stale marking is supported.
+* Source traceability metadata is included where practical.
+* No salary, allowance, deduction, tax, BPJS, THR, net pay, payslip finalization, or payroll posting values are produced.
+* Existing attendance, overtime, and payroll behavior remain unchanged.
+* Validation completed successfully with:
+  * 341 tests passed
 Repository State
 
 Current stable milestone:
 
-v1.4.9-overtime-attendance-readiness
+v1.4.10-attendance-payroll-readiness
 
 Repository status expectations:
 
@@ -282,15 +304,15 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.4.9-overtime-attendance-readiness
+v1.4.10-attendance-payroll-readiness
 
 Current test baseline:
-334 tests
-932 assertions
+341 tests
+976 assertions
 No automated regressions detected
 
 Manual browser UAT status:
-Completed and approved by project owner for v1.4.9-overtime-attendance-readiness
+Completed and approved by project owner for v1.4.10-attendance-payroll-readiness
 
 ## License Hygiene Policy
 
@@ -912,7 +934,7 @@ GPS-ready attendance location support is available for Phase 3 attendance work.
 
 Phase transition confirmation:
 Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
-Phase 3 Attendance Enterprise is active on the completed v1.4.9-overtime-attendance-readiness baseline.
+Sprint 5 Attendance Enterprise is completed on the validated and UAT-approved v1.4.10-attendance-payroll-readiness baseline.
 
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
@@ -927,17 +949,18 @@ WorkdayPatternDay uses the existing 1=Monday through 7=Sunday convention, so shi
 Half-day leave is already modeled in LeaveRequest, but attendance summary leave override remains limited to approved full-day leave handling in v1.4.2.
 Holiday and weekend resolution uses the existing company-scoped active holiday calendar and active/default workday pattern; no employee-specific calendar assignment layer has been introduced yet.
 Overtime foundation now exists as attendance-readiness only; no payroll payable overtime calculation is implemented yet.
-No payroll integration is implemented yet.
+Attendance payroll readiness now exists as a non-monetary snapshot layer only; payroll periods/runs, salary calculation, allowances, deductions, tax, BPJS, THR, net pay, payslip finalization, and payroll posting remain deferred.
+No full payroll integration is implemented yet.
 Approved correction reversal remains deferred to a future sprint.
 Bulk correction remains deferred.
 Monthly attendance lock remains deferred.
 
 Next planned phase:
-Attendance payroll readiness planning follows the approved v1.4.9-overtime-attendance-readiness milestone.
+Sprint 6 Payroll Enterprise
 
 Next Sprint
 Recommended future milestone:
-v1.4.10 Attendance Payroll Readiness
+v1.5.0-payroll-period-and-run-foundation
 
 Roadmap Update
 
@@ -963,7 +986,8 @@ Sprint 5 Attendance Enterprise
 ✅ v1.4.7 Attendance Selfie Verification
 ✅ v1.4.8 Attendance Device Trust Management
 ✅ v1.4.9 Overtime Attendance Readiness
-⏳ v1.4.10 Attendance Payroll Readiness
+✅ v1.4.10 Attendance Payroll Readiness
+✅ Sprint 5 Attendance Enterprise Completed
 ⬜ Sprint 6 Payroll Enterprise
 
 Phase 2 Complete
@@ -975,10 +999,10 @@ v1.3.4 Access Scope Hardening
 v1.3.5 Stabilization Check
 
 Next Phase
-v1.4.10 Attendance Payroll Readiness
+Sprint 6 Payroll Enterprise
 
 Next Planned Milestone:
-v1.4.10-attendance-payroll-readiness
+v1.5.0-payroll-period-and-run-foundation
 
 Sprint 4 prerequisites already completed:
 Security & RBAC

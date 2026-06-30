@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Attendance;
 use App\Models\AttendanceCorrection;
+use App\Models\AttendancePayrollSnapshot;
 use App\Models\AttendanceLog;
 use App\Models\AttendancePolicy as AttendancePolicyModel;
 use App\Models\AttendanceSummary;
@@ -55,6 +56,7 @@ use App\Models\Bank;
 use App\Models\ContractType;
 use App\Policies\AttendancePolicy as AttendanceRecordPolicy;
 use App\Policies\AttendanceCorrectionPolicy;
+use App\Policies\AttendancePayrollSnapshotPolicy;
 use App\Policies\AttendanceLogPolicy;
 use App\Policies\AttendancePolicyPolicy;
 use App\Policies\AttendanceSummaryPolicy;
@@ -125,6 +127,7 @@ class AuthServiceProvider extends ServiceProvider
         Shift::class => ShiftPolicy::class,
         Attendance::class => AttendanceRecordPolicy::class,
         AttendanceCorrection::class => AttendanceCorrectionPolicy::class,
+        AttendancePayrollSnapshot::class => AttendancePayrollSnapshotPolicy::class,
         AttendanceLog::class => AttendanceLogPolicy::class,
         AttendancePolicyModel::class => AttendancePolicyPolicy::class,
         AttendanceSummary::class => AttendanceSummaryPolicy::class,
