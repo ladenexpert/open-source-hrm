@@ -217,6 +217,16 @@ class Company extends Model
         return $this->hasMany(AttendanceCorrection::class);
     }
 
+    public function overtimeRequests(): HasMany
+    {
+        return $this->hasMany(OvertimeRequest::class);
+    }
+
+    public function overtimeCalculations(): HasMany
+    {
+        return $this->hasMany(OvertimeCalculation::class);
+    }
+
     public function employeeDevices(): HasMany
     {
         return $this->hasMany(EmployeeDevice::class);

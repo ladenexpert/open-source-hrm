@@ -38,6 +38,8 @@ use App\Models\LeaveTransaction;
 use App\Models\LeaveType;
 use App\Models\MaritalStatus;
 use App\Models\Message;
+use App\Models\OvertimeCalculation;
+use App\Models\OvertimeRequest;
 use App\Models\Payroll;
 use App\Models\Position;
 use App\Models\Religion;
@@ -80,6 +82,8 @@ use App\Policies\LeaveRequestPolicy;
 use App\Policies\LeaveTransactionPolicy;
 use App\Policies\LeaveTypePolicy;
 use App\Policies\MessagePolicy;
+use App\Policies\OvertimeCalculationPolicy;
+use App\Policies\OvertimeRequestPolicy;
 use App\Policies\PayrollPolicy;
 use App\Policies\PositionPolicy;
 use App\Policies\ScopedMasterDataPolicy;
@@ -134,6 +138,8 @@ class AuthServiceProvider extends ServiceProvider
         LeaveTransaction::class => LeaveTransactionPolicy::class,
         LeaveRequest::class => LeaveRequestPolicy::class,
         LeaveRequestAttachment::class => LeaveRequestAttachmentPolicy::class,
+        OvertimeRequest::class => OvertimeRequestPolicy::class,
+        OvertimeCalculation::class => OvertimeCalculationPolicy::class,
         EmployeeSchedule::class => EmployeeSchedulePolicy::class,
         HolidayCalendar::class => HolidayCalendarPolicy::class,
         Holiday::class => HolidayPolicy::class,

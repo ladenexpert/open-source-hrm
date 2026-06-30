@@ -247,11 +247,31 @@ Attendance device trust management completed
 * Validation completed successfully with:
   * 319 tests passed
   * 899 assertions
+v1.4.9-overtime-attendance-readiness
+Overtime attendance readiness completed
+* Added a minimal service-based overtime foundation because no pre-existing overtime module existed in the active repo.
+* Added OvertimeRequest and OvertimeCalculation domain models.
+* Added OvertimeRequestService and OvertimeCalculationService.
+* Added lightweight Filament admin visibility through OvertimeRequestResource and OvertimeCalculationResource.
+* Wired overtime readiness with the existing approval foundation using ApprovalModuleType::OVERTIME where safe.
+* AttendanceSummary is now the source of truth for overtime minutes.
+* Overtime calculation uses actual attendance data, scheduled end time, actual clock out, and attendance policy overtime threshold.
+* Overtime threshold is handled conservatively as a minimum threshold before overtime is counted.
+* Calculated overtime uses the safer lower value between actual attendance-supported overtime and approved/requested overtime minutes.
+* Overtime calculation is idempotent and avoids duplicate employee/date/request calculations.
+* Attendance correction can support overtime recalculation without automatically approving overtime.
+* Employee-based approval actors are used, consistent with current project convention.
+* Payroll behavior remains unchanged.
+* No final payable payroll overtime value is produced in this milestone.
+* Added OvertimeAttendanceReadinessV149Test coverage.
+* Validation completed successfully with:
+  * 334 tests passed
+  * 932 assertions
 Repository State
 
 Current stable milestone:
 
-v1.4.8-attendance-device-trust-management
+v1.4.9-overtime-attendance-readiness
 
 Repository status expectations:
 
@@ -262,15 +282,15 @@ migrate --seed verified
 php artisan test passing
 Current Stable Milestone
 
-v1.4.8-attendance-device-trust-management
+v1.4.9-overtime-attendance-readiness
 
 Current test baseline:
-319 tests
-899 assertions
+334 tests
+932 assertions
 No automated regressions detected
 
 Manual browser UAT status:
-Completed and approved by project owner for v1.4.8-attendance-device-trust-management
+Completed and approved by project owner for v1.4.9-overtime-attendance-readiness
 
 ## License Hygiene Policy
 
@@ -892,7 +912,7 @@ GPS-ready attendance location support is available for Phase 3 attendance work.
 
 Phase transition confirmation:
 Phase 2 Leave Management is confirmed complete across v1.3.0 through v1.3.5.
-Phase 3 Attendance Enterprise is active on the completed v1.4.8-attendance-device-trust-management baseline.
+Phase 3 Attendance Enterprise is active on the completed v1.4.9-overtime-attendance-readiness baseline.
 
 Known issues or intentional deferrals:
 No new permission framework was introduced; hardening stays within the existing Employee, policy, Filament resource, and approval-service architecture.
@@ -906,18 +926,18 @@ Shift resolution intentionally returns null when no employee schedule, assignmen
 WorkdayPatternDay uses the existing 1=Monday through 7=Sunday convention, so shift_pattern_details matches that internal convention instead of the originally proposed 0=Sunday through 6=Saturday format.
 Half-day leave is already modeled in LeaveRequest, but attendance summary leave override remains limited to approved full-day leave handling in v1.4.2.
 Holiday and weekend resolution uses the existing company-scoped active holiday calendar and active/default workday pattern; no employee-specific calendar assignment layer has been introduced yet.
-No overtime calculation is implemented yet.
+Overtime foundation now exists as attendance-readiness only; no payroll payable overtime calculation is implemented yet.
 No payroll integration is implemented yet.
 Approved correction reversal remains deferred to a future sprint.
 Bulk correction remains deferred.
 Monthly attendance lock remains deferred.
 
 Next planned phase:
-Attendance overtime integration planning follows the approved v1.4.8-attendance-device-trust-management milestone.
+Attendance payroll readiness planning follows the approved v1.4.9-overtime-attendance-readiness milestone.
 
 Next Sprint
 Recommended future milestone:
-v1.4.9 Attendance Overtime Integration
+v1.4.10 Attendance Payroll Readiness
 
 Roadmap Update
 
@@ -942,8 +962,8 @@ Sprint 5 Attendance Enterprise
 ✅ v1.4.6 Attendance Geo Capture Enhancement
 ✅ v1.4.7 Attendance Selfie Verification
 ✅ v1.4.8 Attendance Device Trust Management
-⏳ v1.4.9 Attendance Overtime Integration
-⬜ v1.4.10 Attendance Payroll Readiness
+✅ v1.4.9 Overtime Attendance Readiness
+⏳ v1.4.10 Attendance Payroll Readiness
 ⬜ Sprint 6 Payroll Enterprise
 
 Phase 2 Complete
@@ -955,10 +975,10 @@ v1.3.4 Access Scope Hardening
 v1.3.5 Stabilization Check
 
 Next Phase
-v1.4.9 Attendance Overtime Integration
+v1.4.10 Attendance Payroll Readiness
 
 Next Planned Milestone:
-v1.4.9 Attendance Overtime Integration
+v1.4.10-attendance-payroll-readiness
 
 Sprint 4 prerequisites already completed:
 Security & RBAC

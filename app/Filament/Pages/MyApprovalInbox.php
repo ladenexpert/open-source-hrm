@@ -4,15 +4,18 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\Attendance\AttendanceCorrectionResource as AdminAttendanceCorrectionResource;
 use App\Filament\Resources\LeaveRequests\LeaveRequestResource;
+use App\Filament\Resources\OvertimeRequests\OvertimeRequestResource;
 use App\Filament\Resources\ApprovalRequests\ApprovalRequestResource;
 use App\Models\ApprovalRequest;
 use App\Models\ApprovalRequestStep;
 use App\Models\AttendanceCorrection;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
+use App\Models\OvertimeRequest;
 use App\Services\Attendance\AttendanceCorrectionService;
 use App\Services\ApprovalActionService;
 use App\Services\Leave\LeaveApprovalService;
+use App\Services\OvertimeRequestService;
 use App\Support\OrganizationScope;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -107,6 +110,14 @@ class MyApprovalInbox extends Page implements HasTable
                 TextColumn::make('request.employeeSubject.full_name')
                     ->label('Subject')
                     ->toggleable(),
+                TextColumn::make('overtime_request.overtime_date')
+                    ->label('OT Date')
+                    ->state(fn (ApprovalRequestStep $record): string => $this->resolveOvertimeRequest($record->request)?->overtime_date?->toDateString() ?? '-')
+                    ->toggleable(),
+                TextColumn::make('overtime_request.requested_minutes')
+                    ->label('OT Minutes')
+                    ->state(fn (ApprovalRequestStep $record): ?int => $this->resolveOvertimeRequest($record->request)?->requested_minutes)
+                    ->toggleable(),
                 TextColumn::make('workflowStep.name')
                     ->label('Step'),
                 TextColumn::make('step_order')
@@ -132,6 +143,8 @@ class MyApprovalInbox extends Page implements HasTable
                             app(LeaveApprovalService::class)->processApproval($record->request, auth()->user(), 'approved', $data['comments'] ?? null);
                         } elseif ($this->resolveAttendanceCorrection($record->request) instanceof AttendanceCorrection) {
                             app(AttendanceCorrectionService::class)->processApproval($record->request, auth()->user(), 'approved', $data['comments'] ?? null);
+                        } elseif ($this->resolveOvertimeRequest($record->request) instanceof OvertimeRequest) {
+                            app(OvertimeRequestService::class)->processApproval($record->request, auth()->user(), 'approved', $data['comments'] ?? null);
                         } else {
                             app(ApprovalActionService::class)->approveCurrentStep($record->request, auth()->user(), $data['comments'] ?? null);
                         }
@@ -151,6 +164,8 @@ class MyApprovalInbox extends Page implements HasTable
                             app(LeaveApprovalService::class)->processApproval($record->request, auth()->user(), 'rejected', $data['comments'] ?? null);
                         } elseif ($this->resolveAttendanceCorrection($record->request) instanceof AttendanceCorrection) {
                             app(AttendanceCorrectionService::class)->processApproval($record->request, auth()->user(), 'rejected', $data['comments'] ?? null);
+                        } elseif ($this->resolveOvertimeRequest($record->request) instanceof OvertimeRequest) {
+                            app(OvertimeRequestService::class)->processApproval($record->request, auth()->user(), 'rejected', $data['comments'] ?? null);
                         } else {
                             app(ApprovalActionService::class)->rejectCurrentStep($record->request, auth()->user(), $data['comments'] ?? null);
                         }
@@ -197,6 +212,22 @@ class MyApprovalInbox extends Page implements HasTable
         return $approvable;
     }
 
+    private function resolveOvertimeRequest(?ApprovalRequest $approvalRequest): ?OvertimeRequest
+    {
+        if (! $approvalRequest instanceof ApprovalRequest) {
+            return null;
+        }
+
+        $approvalRequest->loadMissing('approvable');
+        $approvable = $approvalRequest->approvable;
+
+        if (! $approvable instanceof OvertimeRequest) {
+            return null;
+        }
+
+        return $approvable;
+    }
+
     private function resolveOpenUrl(ApprovalRequest $approvalRequest): string
     {
         $leaveRequest = $this->resolveLeaveRequest($approvalRequest);
@@ -209,6 +240,12 @@ class MyApprovalInbox extends Page implements HasTable
 
         if ($attendanceCorrection instanceof AttendanceCorrection) {
             return AdminAttendanceCorrectionResource::getUrl('view', ['record' => $attendanceCorrection]);
+        }
+
+        $overtimeRequest = $this->resolveOvertimeRequest($approvalRequest);
+
+        if ($overtimeRequest instanceof OvertimeRequest) {
+            return OvertimeRequestResource::getUrl('view', ['record' => $overtimeRequest]);
         }
 
         return ApprovalRequestResource::getUrl('view', ['record' => $approvalRequest]);

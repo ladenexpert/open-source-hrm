@@ -478,6 +478,16 @@ class Employee extends Authenticatable implements FilamentUser
         return $this->hasMany(AttendanceCorrection::class);
     }
 
+    public function overtimeRequests(): HasMany
+    {
+        return $this->hasMany(OvertimeRequest::class);
+    }
+
+    public function overtimeCalculations(): HasMany
+    {
+        return $this->hasMany(OvertimeCalculation::class);
+    }
+
     public function employeeDevices(): HasMany
     {
         return $this->hasMany(EmployeeDevice::class);
@@ -511,6 +521,36 @@ class Employee extends Authenticatable implements FilamentUser
     public function updatedAttendanceCorrections(): HasMany
     {
         return $this->hasMany(AttendanceCorrection::class, 'updated_by');
+    }
+
+    public function submittedOvertimeRequests(): HasMany
+    {
+        return $this->hasMany(OvertimeRequest::class, 'submitted_by');
+    }
+
+    public function approvedOvertimeRequests(): HasMany
+    {
+        return $this->hasMany(OvertimeRequest::class, 'approved_by');
+    }
+
+    public function rejectedOvertimeRequests(): HasMany
+    {
+        return $this->hasMany(OvertimeRequest::class, 'rejected_by');
+    }
+
+    public function cancelledOvertimeRequests(): HasMany
+    {
+        return $this->hasMany(OvertimeRequest::class, 'cancelled_by');
+    }
+
+    public function createdOvertimeRequests(): HasMany
+    {
+        return $this->hasMany(OvertimeRequest::class, 'created_by');
+    }
+
+    public function updatedOvertimeRequests(): HasMany
+    {
+        return $this->hasMany(OvertimeRequest::class, 'updated_by');
     }
 
     public function createdAttendanceLogs(): HasMany

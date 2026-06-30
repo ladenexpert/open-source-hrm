@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Validation\ValidationException;
 
 class AttendanceSummary extends Model
@@ -218,6 +219,16 @@ class AttendanceSummary extends Model
     public function lastLog(): BelongsTo
     {
         return $this->belongsTo(AttendanceLog::class, 'last_log_id');
+    }
+
+    public function overtimeRequests(): HasMany
+    {
+        return $this->hasMany(OvertimeRequest::class);
+    }
+
+    public function overtimeCalculations(): HasMany
+    {
+        return $this->hasMany(OvertimeCalculation::class);
     }
 
     public function createdBy(): BelongsTo

@@ -7,9 +7,11 @@ use App\Filament\Resources\ApprovalRequests\Schemas\ApprovalRequestInfolist;
 use App\Models\ApprovalRequest;
 use App\Models\AttendanceCorrection;
 use App\Models\LeaveRequest;
+use App\Models\OvertimeRequest;
 use App\Services\Attendance\AttendanceCorrectionService;
 use App\Services\ApprovalActionService;
 use App\Services\Leave\LeaveApprovalService;
+use App\Services\OvertimeRequestService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -40,6 +42,8 @@ class ViewApprovalRequest extends ViewRecord
                         app(LeaveApprovalService::class)->processApproval($this->record, Auth::user(), 'approved', $data['comments'] ?? null);
                     } elseif ($this->record->approvable instanceof AttendanceCorrection) {
                         app(AttendanceCorrectionService::class)->processApproval($this->record, Auth::user(), 'approved', $data['comments'] ?? null);
+                    } elseif ($this->record->approvable instanceof OvertimeRequest) {
+                        app(OvertimeRequestService::class)->processApproval($this->record, Auth::user(), 'approved', $data['comments'] ?? null);
                     } else {
                         app(ApprovalActionService::class)->approveCurrentStep($this->record, Auth::user(), $data['comments'] ?? null);
                     }
@@ -64,6 +68,8 @@ class ViewApprovalRequest extends ViewRecord
                         app(LeaveApprovalService::class)->processApproval($this->record, Auth::user(), 'rejected', $data['comments'] ?? null);
                     } elseif ($this->record->approvable instanceof AttendanceCorrection) {
                         app(AttendanceCorrectionService::class)->processApproval($this->record, Auth::user(), 'rejected', $data['comments'] ?? null);
+                    } elseif ($this->record->approvable instanceof OvertimeRequest) {
+                        app(OvertimeRequestService::class)->processApproval($this->record, Auth::user(), 'rejected', $data['comments'] ?? null);
                     } else {
                         app(ApprovalActionService::class)->rejectCurrentStep($this->record, Auth::user(), $data['comments'] ?? null);
                     }
